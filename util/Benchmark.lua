@@ -12,7 +12,7 @@ function measure_run_time(f, count)
 end
 
 function benchmark(f_name, f)
-	local t = execute(measure_run_time(f, BENCHMARK_MULTIPLIER))
+	local t = execute(function() return measure_run_time(f, BENCHMARK_MULTIPLIER) end)
 	if t ~= nil then
 		Log.info(BENCHMARK_MULTIPLIER .. ' runs of ' .. f_name .. ' takes ' .. t .. ' sec to complete')
 	else
