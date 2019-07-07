@@ -1,3 +1,4 @@
+require('CeresStdLib.base.Native')
 require('CeresStdLib.base.Optimizations')
 require('CeresStdLib.base.Rawcode')
 require('CeresStdLib.base.Execute')
