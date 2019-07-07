@@ -1,20 +1,17 @@
-require('CeresStdLib.base.Execute')
-
 local arr = {}
-local arr_count = 0
 
 function init(f)
-	arr[arr_count] = f
-	arr_count = arr_count + 1
+	if arr ~= nil then
+		table.insert(arr, f)
+	else
+		ceres.catch(f)
+	end
 end
 
-TimerStart(
-	CreateTimer(),
-	0.00,
-	false,
-	function()
-		for i = 0, arr_count - 1 do
-			execute(a[i])
-		end
+TimerStart(CreateTimer(), 0.00, false, function()
+	for i, f in pairs(arr) do
+		ceres.catch(f)
 	end
-)
+	arr = nil
+	DestroyTimer(GetExpiredTimer())
+end)
