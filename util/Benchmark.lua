@@ -13,5 +13,9 @@ end
 
 function benchmark(f_name, f)
 	local t = execute(measure_run_time(f, BENCHMARK_MULTIPLIER))
-	print('Benchmark ' .. f_name .. ' takes ' .. t .. ' ms to complete on average')
+	if t ~= nil then
+		Log.info(BENCHMARK_MULTIPLIER .. ' runs of ' .. f_name .. ' takes ' .. t .. ' sec to complete')
+	else
+		Log.warn(f_name .. ' failed to execute')
+	end
 end
