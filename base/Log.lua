@@ -34,7 +34,7 @@ local arr = {}
 init(function()
 	for i, p in pairs(arr) do
 		DisplayTimedTextToPlayer(GetLocalPlayer(), 0., 0., DEBUG_MSG_DURATION,
-			LogLevel.getTag(p.level) .. ' - ' .. p.msg)
+			LogLevel.getTag(p.level) .. p.msg)
 	end
 	arr = nil
 end)
@@ -45,7 +45,7 @@ function printLog(level, msg)
 			table.insert(arr, {level = level, msg = msg})
 		else
 			DisplayTimedTextToPlayer(GetLocalPlayer(), 0., 0., DEBUG_MSG_DURATION,
-				LogLevel.getTag(level) .. ' - ' .. msg)
+				LogLevel.getTag(level) .. msg)
 		end
 	end
 end
