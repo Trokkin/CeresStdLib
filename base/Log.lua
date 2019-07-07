@@ -1,4 +1,3 @@
-require('CeresStdLib.container.List')
 require('CeresStdLib.base.Init')
 
 LogLevel = {
