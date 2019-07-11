@@ -13,13 +13,6 @@ TREE_RECOGNITION = fromRawCode('Aeat')
 LOCUST_ID = fromRawCode('Aloc')
 GHOST_INVIS_ID = fromRawCode('Agho')
 GHOST_VIS_ID = fromRawCode('Aeth')
-DUMMY_PLAYER = nil
-DUMMY_HOSTILE_PLAYER = nil
 
-ceres.addHook(
-	'main::before',
-	function()
-		DUMMY_PLAYER = players[PLAYER_NEUTRAL_PASSIVE]
-		DUMMY_HOSTILE_PLAYER = players[PLAYER_NEUTRAL_AGGRESSIVE]
-	end
-)
+DUMMY_PLAYER = players[PLAYER_NEUTRAL_PASSIVE]
+DUMMY_HOSTILE_PLAYER = players[PLAYER_NEUTRAL_AGGRESSIVE]
