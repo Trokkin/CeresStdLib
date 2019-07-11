@@ -7,6 +7,8 @@ This is the repository of the Ceres standard library which provides a vast amoun
 This library is designed for use with [Ceres map builder for Warcraft III](https://github.com/ElusiveMori/ceres-wc3).
 To use StdLib in a Ceres project, simply clone/download this repository into `/lib/` folder of the project.
 
+In case that you don't use Ceres, you can either begin to use it or painfully copy&paste every module in a separate trigger of your wc3 map, hoping that correct initialization order would be maintained. 
+
 # Motivation
 
 Ceres aims to provide a better "out of the box" experience when it comes to Warcraft 3 modding. Since barebones Lua is very limited with Warcraft specific functionality, developers have to implement everything themselves. Before Ceres these resources had to be gathered and copied manually from modding forums across the web. Public code resources in forums threads are not only hard to maintain and keep up to date, but also often untested, interdependent on other resources and incompatible with other code.
