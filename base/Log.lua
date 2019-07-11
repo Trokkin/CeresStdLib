@@ -17,7 +17,6 @@ LogLevel.Tags = {
 
 
 DEBUG_LEVEL = -1 -- LogLevel.INFO
-DEBUG_MSG_DURATION = 45
 
 function LogLevel.getTag(level)
 	local r = LogLevel.Tags[level]
@@ -32,37 +31,35 @@ Log = {}
 local arr = {}
 init(function()
 	for i, p in pairs(arr) do
-		DisplayTimedTextToPlayer(GetLocalPlayer(), 0., 0., DEBUG_MSG_DURATION,
-			LogLevel.getTag(p.level) .. p.msg)
+		print(LogLevel.getTag(p.level), table.unpack(p.msg))
 	end
 	arr = nil
 end)
 
-function printLog(level, msg)
+function printLog(level, ...)
 	if DEBUG_LEVEL <= level then
 		if arr ~= nil then
-			table.insert(arr, {level = level, msg = msg})
+			table.insert(arr, {level = level, msg = {...}})
 		else
-			DisplayTimedTextToPlayer(GetLocalPlayer(), 0., 0., DEBUG_MSG_DURATION,
-				LogLevel.getTag(level) .. msg)
+			print(LogLevel.getTag(level), ...)
 		end
 	end
 end
 
-function Log.trace(msg)
-	printLog(LogLevel.TRACE, msg)
+function Log.trace(...)
+	printLog(LogLevel.TRACE, ...)
 end
-function Log.debug(msg)
-	printLog(LogLevel.DEBUG, msg)
+function Log.debug(...)
+	printLog(LogLevel.DEBUG, ...)
 end
-function Log.info(msg)
-	printLog(LogLevel.INFO, msg)
+function Log.info(...)
+	printLog(LogLevel.INFO, ...)
 end
-function Log.warn(msg)
-	printLog(LogLevel.WARNING, msg)
+function Log.warn(...)
+	printLog(LogLevel.WARNING, ...)
 end
-function Log.error(msg)
-	printLog(LogLevel.ERROR, msg)
+function Log.error(...)
+	printLog(LogLevel.ERROR, ...)
 end
 function Log.setLevel(level)
 	DEBUG_LEVEL = level
