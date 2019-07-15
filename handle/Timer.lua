@@ -25,11 +25,13 @@ replaceNative('DestroyTimer', function(t)
 	free_timers[t] = true
 end)
 
---- Example: `doPeriodically(1/32, function(t) DestroyTimer(t) end)`
+--- Use `DestroyTimer(arg[1])` to stop this.
+--- Example: `doPeriodically(1/32, function(t) if done then DestroyTimer(t) end end)`
 ---@param period number
 ---@param func function
 function doPeriodicaly(period, func)
-	TimerStart(CreateTimer(), period, true, function() func(GetExpiredTimer()) DestroyTimer(GetExpiredTimer()) end)
+	local t = CreateTimer()
+	TimerStart(t, period, true, function() func(t) DestroyTimer(GetExpiredTimer()) end)
 end
 
 ---@param period number
