@@ -15,6 +15,18 @@ Ceres aims to provide a better "out of the box" experience when it comes to Warc
 
 By introducing a standard library, we offer the developers everything they need to start focusing on creating content, rather than implementing basics to even get started. The frameworks provided by the standard library try to be lightweight and unintrusive, while still configurable for your needs. The streamlined API allows external packages to share code and work independently.
 
+# Contribution
+
+Not everyone can push into this repository directly, but anyone can create pull requests.
+When doing so, please consider making your changes as discrete as possible. Thus it will be easier to review and approve your contribution.
+
+To create one:
+- Create your fork of this repository.
+- `git clone` from your fork.
+- Create a new branch.
+- Commit and push into your fork.
+- Go back to github, where it will suggest for you to create the pull request into main repository.
+
 # Inspiration
 
 While Lua support for Warcraft 3 was only a dream, community has developed it's own language (!) that compiles to JASS, the mighty [WurstScript](https://github.com/wurstscript), which came with [it's own standart library](https://github.com/wurstscript/WurstStdlib2) and a lot of other cool features.
