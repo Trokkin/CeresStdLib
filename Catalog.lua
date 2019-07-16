@@ -12,3 +12,4 @@ require('CeresStdLib.util.Benchmark')
 require('CeresStdLib.util.Shell')
 
 require('CeresStdLib.handle.Timer')
+require('CeresStdLib.container.LinkedList')
