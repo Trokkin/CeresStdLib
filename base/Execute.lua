@@ -18,7 +18,7 @@ end
 --- Else, returns everything what was returned by the function.
 ---@param f function
 function execute(f, ...)
-	xexecute(f, function(msg) Log.error(msg) end, ...)
+	return xexecute(f, function(msg) Log.error(msg) end, ...)
 end
 
 replaceNative('assert', function(...)
