@@ -8,7 +8,9 @@ require('CeresStdLib.base.Native')
 function xexecute(f, handler, ...)
 	r = {pcall(f, ...)}
 	if not r[1] then
-		handler(table.unpack(r, 2))
+		if handler ~= nil then
+			handler(table.unpack(r, 2))
+		end
 		return nil
 	end
 	return table.unpack(r, 2)
