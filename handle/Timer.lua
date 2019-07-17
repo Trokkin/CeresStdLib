@@ -8,9 +8,7 @@ local MAX_PUSHES	= 10000		--	Maximum amount of times push is called before garba
 free_timers.free	= 0
 free_timers.steps	= 0
 
-free_timers.has = function()
-	return free_timers.free > 0
-end
+free_timers.has = function() return free_timers.free > 0 end
 
 free_timers.push = function(t)
 	--	When the number of steps exceeds MAX_PUSHES, collect garbage
