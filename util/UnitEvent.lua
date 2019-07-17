@@ -2,18 +2,23 @@
     UnitEvent (Namesake)
         Originally by Bribe
 
-    Uses Magic Defense instead of Defend ability to detect leave.    
+    Uses Magic Defense instead of Defend ability to detect leave.
+    How it works:
+
+    -> A unit is created
+        -> Fires a unit creation event (via proxy Unit Enters Region event)
+        -> The magic defense ability is added to the unit if not already present.
+        -> A new index is generated for that unit.
+
+    -> A unit is removed
+        -> When the magic defense ability is removed, unit issues the order 852479.
+        -> If the ability was removed, mark the unit as removed.
 ]]
 
-require('CeresStdLib.base.Rawcode')
-require('CeresStdLib.base.Optimizations')
-require('CeresStdLib.base.Native')
-require('CeresStdLib.base.Init')
-require('CeresStdLib.base.Log')
+require('CeresStdLib.base.Basics')
 
+require('CeresStdLib.handle.UnitGroup')
 require('CeresStdLib.util.World')
-
-DETECT_LEAVE            = fromRawCode('Amdf')
 
 EVENT_UNIT_ENTER        = 1
 EVENT_UNIT_LEAVE        = 2
@@ -21,102 +26,71 @@ EVENT_UNIT_LEAVE        = 2
 UnitEvent = {}
 
 local trigTable         = {}
-local __userData        = {}
-__userData[-1]          = {}   --  Holds references to each unit
-__userData[-2]          = {}   --  Holds preplaced flag
-__userData[0]           = 0
+local userData          = {}
 
-trigTable[3], trigTable[4]                  = {}, {}
+userData.preplaced      = {}   --  Holds references to each unit
+userData.unitId         = {}   --  Holds preplaced flag
+userData.nativeHasAbil  = {}   --  Holds a flag telling the system if the unit already has that ability.
+userData.indexed        = {}
 
-local __evType          = 0
-local __evData          = {0, nil}
-local __initialized     = false
+trigTable[0]            = CreateTrigger()
+trigTable[1]            = CreateTrigger()
+trigTable[2]            = CreateGroup()
+trigTable[3]            = {}
+trigTable[4]            = {}
 
-replaceNative('GetUnitUserData', function(u)
-    return __userData[u]
-end)
-replaceNative('SetUnitUserData', function(u, newField)
-    __userData[u] = newField
-end)
+local evType            = 0
+local evData            = nil
+local initialized       = false
 
-function __userData:alloc()
-    local i = __userData[0]
-    if i == 0 then
-        i                   = i + 1
-        __userData[0]       = i
-        return i
-    end
-    if (not __userData[i]) or (__userData[i] == 0) then
-        __userData[0]     = i + 1
-        __userData[i]     = -1
-        i                 = __userData[0]
-    else
-        __userData[0]     = __userData[i]
-        __userData[i]     = -1
-    end
-    return i
-end
-
-function __userData:dealloc(i)
-    if (not i) or (__userData[i] ~= -1) then return end
-
-    __userData[i], __userData[0]         = __userData[0], i
-end
-
-function GetUnitId(u) return Native.GetUnitUserData(u) end
-function GetUnitById(i) return __userData[-1][i] end
-function IsUnitPreplaced(u) return __userData[-2][GetUnitId(u)] end
+function GetUnitId(u) return GetHandleId(u) end
+function GetUnitById(i) return userData.unitId[i] end
+function IsUnitPreplaced(u) return userData.preplaced[GetHandleId(u)] end
 
 function UnitEvent.registerCallback(eventType, func)
     if eventType > 2 or eventType < 1 then return end
     table.insert(trigTable[eventType + 2], func)
 end
 
-function UnitEvent.getEventType() return __evType end
-function UnitEvent.getTriggerUnit() return __evData[1] end
-function UnitEvent.getTriggerIndex() return __evData[0] end
+function UnitEvent.getEventType() return evType end
+function UnitEvent.getTriggerUnit() return evData end
+function UnitEvent.getTriggerUnitId() return GetHandleId(evData) end
 
-local function __callback()
-    local i = __evType + 2
-    if evType == 1 then
-        print('Event Type: EVENT_UNIT_ENTER')
-    elseif evType == 2 then
-        print('Event Type: EVENT_UNIT_LEAVE')
-    end
+local function callback()
+    local i = evType + 2
     for _, func in pairs(trigTable[i]) do
         pcall(func)
     end
 end
 
 ceres.addHook("main::before", function()
-    trigTable[0], trigTable[1], trigTable[2]    = CreateTrigger(), CreateTrigger(), CreateGroup()
-
     TriggerAddCondition(trigTable[0], Filter(function()
         local issuedOrder   = GetIssuedOrderId()
         local u             = GetTriggerUnit()
         --  Magic undefense
         if issuedOrder == 852479 then
             if BlzGetUnitAbility(u, DETECT_LEAVE) == nil then
-                local i             = Native.GetUnitUserData(u)
-                __userData[u]       = nil
-                __userData[-2][i]   = nil
-                __userData[-1][i]   = nil
-                Native.SetUnitUserData(u, 0)
+                local i     = GetHandleId(u)
+                if GetUnitTypeId(u) == 0 then
+                    userData.indexed[i]         = nil
+                    userData[i]                 = nil
+                    userData.preplaced[i]       = nil
+                    userData.unitId[i]          = nil
+                    userData.nativeHasAbil[i]   = nil
 
-                if __initialized then
-                    local l     = __evType
-                    local ij    = __evData[0]
-                    local jk    = __evData[1]
-                    
-                    __evType    = EVENT_UNIT_LEAVE
-                    __evData[0] = i
-                    __evData[1] = u
-                    __callback()
-                    __evData[1] = jk
-                    __evData[0] = ij
-                    __evType    = l        
+                    --  Only do callback if the game has already initialized.
+                    if initialized then
+                        local l     = evType
+                        local ij    = evData
+                        
+                        evType      = EVENT_UNIT_LEAVE
+                        evData      = u
+                        callback()
+                        evData      = ij
+                        evType      = l        
+                    end
+                    userData.dealloc(i)
                 end
-                __userData.dealloc(i)
             end
         end
     end))
@@ -128,59 +102,53 @@ ceres.addHook("main::before", function()
     TriggerRegisterEnterRegion(trigTable[1], World.REG, nil)
     TriggerAddCondition(trigTable[1], Filter(function()
         local u = GetTriggerUnit()
+        local b = UnitAddAbility(u, DETECT_LEAVE)
+        local i = GetHandleId(u)
 
-        UnitAddAbility(u, DETECT_LEAVE)
         UnitMakeAbilityPermanent(u, true, DETECT_LEAVE)
-        if GetUnitId(u) == 0 then
-            local i = __userData:alloc()
-
-            Native.SetUnitUserData(u, i)
-            __userData[-2][i]   = not __initialized
-            __userData[-1][i]   = u
+        if not userData.indexed[i] then
+            userData.indexed[i]         = true
+            userData.preplaced[i]       = not initialized
+            userData.unitId[i]          = u
+            userData.nativeHasAbil[i]   = not b
             
-            if not __initialized then
-                GroupAddUnit(trigTable[2], u)
-            else
-                local l     = __evType
-                local ij    = __evData[0]
-                local jk    = __evData[1]
-                
-                __evType    = EVENT_UNIT_ENTER
-                __evData[0] = i
-                __evData[1] = u
-                __callback()
-                __evData[1] = jk
-                __evData[0] = ij
-                __evType    = l
+            local l     = evType
+            local ij    = evData
+
+            if initialized then
+                evType      = EVENT_UNIT_ENTER
+                evData      = u
+                callback()
+                evData      = ij
+                evType      = l
             end
         end
     end))
 end)
 
-init(function()
-    local i = 0
-    local j = BlzGroupGetSize(trigTable[2])
-    __initialized = true
-    while (i < j) do
-        local u = BlzGroupUnitAt(trigTable[2], i)
-        local l     = __evType
-        if u ~= nil then
-            local ij    = __evData[0]
-            local jk    = __evData[1]
+ceres.addHook('main::after', function()
+    GroupEnumUnitsInRect(trigTable[2], World.RECT, nil)
+    ForGroup(trigTable[2], function()
+        local u = GetEnumUnit()
+        local i = GetHandleId(u)
+        
+        if not userData.indexed[i] then
+            userData.indexed[i]         = true
+            userData.preplaced[i]       = not initialized
+            userData.unitId[i]          = u
+            userData.nativeHasAbil[i]   = not UnitAddAbility(u, DETECT_LEAVE)
+            
+            local l     = evType
+            local ij    = evData
 
-            __evType    = EVENT_UNIT_ENTER
-            __evData[0] = i
-            __evData[1] = u
-            __callback()
-            __evData[1] = jk
-            __evData[0] = ij
-            __evType    = l
+            evType      = EVENT_UNIT_ENTER
+            evData      = u
+            callback()
+            evData      = ij
+            evType      = l
         end
-        i = i + 1
-    end
+    end)
+    DestroyGroup(trigTable[2])
+    trigTable[2]    = nil
+    initialized     = true
 end)
-
-local __oldInitB = InitBlizzard
-InitBlizzard = function()
-    pcall(__oldInitB)
-end
