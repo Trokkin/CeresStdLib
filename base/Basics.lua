@@ -8,11 +8,38 @@ require('CeresStdLib.base.Init')
 ANIMATION_PERIOD = 1 / 32.
 MAX_COLLISION_SIZE = 197.
 
-HEIGHT_ENABLER = fromRawCode('Amrf')
-TREE_RECOGNITION = fromRawCode('Aeat')
-LOCUST_ID = fromRawCode('Aloc')
-GHOST_INVIS_ID = fromRawCode('Agho')
-GHOST_VIS_ID = fromRawCode('Aeth')
+HEIGHT_ENABLER      = fromRawCode('Amrf')
+TREE_RECOGNITION    = fromRawCode('Aeat')
+LOCUST_ID           = fromRawCode('Aloc')
+GHOST_INVIS_ID      = fromRawCode('Agho')
+GHOST_VIS_ID        = fromRawCode('Aeth')
+DETECT_LEAVE        = fromRawCode('Amdf')
 
 DUMMY_PLAYER = players[PLAYER_NEUTRAL_PASSIVE]
 DUMMY_HOSTILE_PLAYER = players[PLAYER_NEUTRAL_AGGRESSIVE]
+
+local META_TABLE    = {
+    TABLES          = {},
+    METATABLES      = {},
+    __newindex      = function(t, k, v) Log.warn('Attempted to assign value', v, ' to key ', k, ' in readonly table.') end,
+    __metatable     = false
+}
+META_TABLE.__index  = function(t, k)
+    return META_TABLE.METATABLES[t][k]
+end
+
+function makeReadonly(table)
+    -- local lastMetatable     = getmetatable(table)    
+    --  If the table is already readonly, return the proxy table
+    if META_TABLE.TABLES[table] then return META_TABLE.TABLES[table] end
+    local proxy                     = {}
+    META_TABLE.METATABLES[proxy]    = table
+    META_TABLE.TABLES[table]        = proxy
+    setmetatable(proxy, META_TABLE)
+    return proxy
+end
+
+local __oldInitB = InitBlizzard
+InitBlizzard = function()
+    pcall(__oldInitB)
+end
