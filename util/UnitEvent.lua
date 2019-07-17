@@ -13,6 +13,11 @@
     -> A unit is removed
         -> When the magic defense ability is removed, unit issues the order 852479.
         -> If the ability was removed, mark the unit as removed.
+
+    How to register to these events:
+    -> UnitEvent.registerCallback(eventType, callback)
+        -> eventType is the EVENT which you will specify (EVENT_UNIT_ENTER, and EVENT_UNIT_LEAVE)
+        -> callback is your function.
 ]]
 
 require('CeresStdLib.base.Basics')
