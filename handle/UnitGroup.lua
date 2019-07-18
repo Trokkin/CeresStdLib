@@ -1,17 +1,18 @@
-require('CeresStdLib.base.Native')
+require('CeresStdLib.base.Basics')
 
-UnitGroup = {}
+local uG    = {}
+UnitGroup   = makeReadonly(uG, 'Unit Group')
 
 replaceNative('GetEnumUnit', function() return UnitGroup.u end)
 replaceNative('ForGroup', function(g, func)
     local i = 0
     local j = BlzGroupGetSize(g)
-    local u = UnitGroup.u
+    local u = uG.u
 
     while (i < j) do
-        UnitGroup.u = BlzGroupUnitAt(g, i)
+        uG.u = BlzGroupUnitAt(g, i)
         func()
         i           = i + 1
     end
-    UnitGroup.u = u    
+    uG.u = u    
 end)

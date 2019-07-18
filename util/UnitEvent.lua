@@ -48,9 +48,16 @@ local evType            = 0
 local evData            = nil
 local initialized       = false
 
+replaceNative('GetUnitUserData', function(u)
+    return userData[GetUnitId(u)]
+end)
+replaceNative('SetUnitUserData', function(u, i)
+    userData[GetUnitId(u)] = i
+end)
+
 function GetUnitId(u) return GetHandleId(u) end
 function GetUnitById(i) return userData.unitId[i] end
-function IsUnitPreplaced(u) return userData.preplaced[GetHandleId(u)] end
+function IsUnitPreplaced(u) return userData.preplaced[GetUnitId(u)] end
 
 function UnitEvent.registerCallback(eventType, func)
     if eventType > 2 or eventType < 1 then return end
@@ -64,7 +71,7 @@ function UnitEvent.getTriggerUnitId() return GetHandleId(evData) end
 local function callback()
     local i = evType + 2
     for _, func in pairs(trigTable[i]) do
-        pcall(func)
+        execute(func)
     end
 end
 
@@ -75,7 +82,7 @@ ceres.addHook("main::before", function()
         --  Magic undefense
         if issuedOrder == 852479 then
             if BlzGetUnitAbility(u, DETECT_LEAVE) == nil then
-                local i     = GetHandleId(u)
+                local i     = GetUnitId(u)
                 if GetUnitTypeId(u) == 0 then
                     userData.indexed[i]         = nil
                     userData[i]                 = nil
@@ -94,7 +101,6 @@ ceres.addHook("main::before", function()
                         evData      = ij
                         evType      = l        
                     end
-                    userData.dealloc(i)
                 end
             end
         end
@@ -108,7 +114,7 @@ ceres.addHook("main::before", function()
     TriggerAddCondition(trigTable[1], Filter(function()
         local u = GetTriggerUnit()
         local b = UnitAddAbility(u, DETECT_LEAVE)
-        local i = GetHandleId(u)
+        local i = GetUnitId(u)
 
         UnitMakeAbilityPermanent(u, true, DETECT_LEAVE)
         if not userData.indexed[i] then
