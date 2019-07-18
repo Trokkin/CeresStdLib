@@ -1,21 +1,16 @@
-World               = {}
-local metaWorld     = {
-    __newindex      = function(t, k, v)
-        k = nil
-        v = nil
-        return
-    end,
-    __metatable     = false
-}
+require('CeresStdLib.base.Basics')
+
+--  Za Warudo should be empty.
+local metaWorld     = {}
+World               = makeReadonly(metaWorld, 'World')
 
 ceres.addHook("main::before", function()
-    World.RECT      = GetWorldBounds()
-    World.REG       = CreateRegion()
-    World.MAX_X     = GetRectMaxX(World.RECT)
-    World.MAX_Y     = GetRectMaxY(World.RECT)
-    World.MIN_X     = GetRectMinX(World.RECT)
-    World.MIN_Y     = GetRectMinY(World.RECT)
-    setmetatable(World, metaWorld)
-    
+    metaWorld.RECT      = GetWorldBounds()
+    metaWorld.REG       = CreateRegion()
+    metaWorld.MAX_X     = GetRectMaxX(metaWorld.RECT)
+    metaWorld.MAX_Y     = GetRectMaxY(metaWorld.RECT)
+    metaWorld.MIN_X     = GetRectMinX(metaWorld.RECT)
+    metaWorld.MIN_Y     = GetRectMinY(metaWorld.RECT)
+
     RegionAddRect(World.REG, World.RECT)
 end)
