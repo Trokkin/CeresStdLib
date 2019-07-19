@@ -1,72 +1,86 @@
 require('CeresStdLib.base.basics')
+require('CeresStdLib.handle.handle')
 
-Timer			= {
-	__handles	= {},
-	__props		= {
-		id			= {
-			get			= function(t) return GetHandleId(t.__obj) end,
-		},
-		remaining	= {
-			get 		= function(t) return TimerGetRemaining(t.__obj) end
-		},
-		timeout		= {
-			get 		= function(t) return TimerGetTimeout(t.__obj) end
-		},
-		elapsed		= {
-			get 		= function(t) return TimerGetElapsed(t.__obj) end
-		},
-		handle		= {
-			get 		= function(t) return t.__obj end
-		},
-	}
-}
-
-function Timer.__index(t, k)
-	if Timer.__props[k] then
-		if Timer.__props[k].get then
-			return Timer.__props[k].get(t)
-		else
-			return Timer.__props[k]
-		end
-	end
-	return rawget(Timer, k)
-end
-
-function Timer.__newindex(t, k, v)
-	if Timer.__props[k] then
-		if Timer.__props[k].set then
-			Timer.__props[k].set(t, v)
-		end
-	end
-end
-
-function Timer.wrap(t)
-	local i = GetHandleId(t)
-	if not Timer.__handles[i] then
-		Timer.__handles[i] = {__obj = t, hasCallback, inCallback}
-		setmetatable(Timer.__handles[i], Timer)
-	end
-	return Timer.__handles[i]
-end
+Timer					= Handle:new()
+Timer.__props.remaining	= {get 		= function(t) return TimerGetRemaining(t.__obj) end}
+Timer.__props.timeout	= {get 		= function(t) return TimerGetTimeout(t.__obj) end}
+Timer.__props.elapsed	= {get 		= function(t) return TimerGetElapsed(t.__obj) end}
 
 function Timer.create() return Timer.wrap(CreateTimer()) end
 function Timer.getExpired() return Timer.wrap(GetExpiredTimer()) end
 
-function Timer:unwrap()	Timer.__handles[self.id] = nil end
-function Timer:resume()	ResumeTimer(self.__obj) end
-function Timer:pause() PauseTimer(self.__obj) end
+function Timer:resume()	
+	if not self.hasCallback then Log.error('Timer:resume >> Cannot resume a timer which hasn\t started yet!') return end
+	if not self.inCallback then
+		ResumeTimer(self.__obj) 
+	else
+		self.hasResumed = true
+		if self.looped then
+			self.loopBroken = true
+		end
+	end
+end
+function Timer:pause() 
+	if self.running then
+		self.running 	= false
+		PauseTimer(self.__obj)
+	end
+end
 function Timer:start(dur, looped, func)
 	self.hasCallback = true
-	TimerStart(self.__obj, dur, looped, function()
-		self.inCallback = true
-		func()
-		self.inCallback = false
-	end) 
+	if not self.inCallback then
+		self.dur		= dur
+		self.looped		= looped
+		self.func		= func
+		self.running	= true
+
+		TimerStart(self.__obj, dur, looped, function()
+			self.running	= false
+			self.inCallback = true
+			self.func()
+			self.inCallback = false
+
+			if self.onDestroy then
+				self.onDestroy	= nil
+				self:destroy()
+			elseif self.hasNewParams then
+				self.hasNewParams	= nil
+				self.running		= true
+				self:pause()
+				self:start(self.newDur, self.newLooped, self.newFunc)
+			
+				self.newDur			= nil
+				self.newLooped		= nil
+				self.newFunc		= nil
+			elseif not self.looped and self.hasResumed then
+				self.hasResumed 	= nil
+				self:start(self.dur, self.looped, self.func)
+			elseif self.loopBroken then
+				self.loopBroken		= nil
+				self.hasResumed		= nil
+				self:start(self.dur, self.looped, self.func)
+			end
+		end) 
+	else
+		self.hasNewParams	= true
+		self.newDur			= dur
+		self.newLooped		= looped
+		self.newFunc		= func
+	end
+end
+function Timer:destroy()
+	if self.inCallback then
+		self.onDestroyFlag = true
+		return
+	end
+	if self.running then
+		self:pause()
+	end 
+	DestroyTimer(self.__obj)
+	self:unwrap()
 end
 
-function Timer:destroy() DestroyTimer(self.__obj) self:unwrap() end
-
---- Example: `doPeriodically(1/32, function(t) DestroyTimer(t) end)`
+--- Example: `doPeriodically(1/32, function(t) end)`
 ---@param period number
 ---@param func function
 function doPeriodicaly(period, func)

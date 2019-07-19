@@ -1,6 +1,7 @@
 require('CeresStdLib.folders')
 require('CeresStdLib.base.basics')
 
+require('CeresStdLib.handle.handle')
 require('CeresStdLib.handle.timer')
 require('CeresStdLib.handle.unitgroup')
 
