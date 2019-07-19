@@ -31,8 +31,7 @@ Handle.setIndexFactory = function(meta)
         end
         local metaHas = rawget(meta, k)
         if metaHas ~= nil then
-            print('Setting metatable attribute ' .. k)
-            rawset(meta, k, v)
+            print('Cannot modify metatable attribute')
             return
         end
         print('Setting table attribute ' .. k)
@@ -55,9 +54,12 @@ end
 
 Handle.unwrapFactory    = function(meta)
     function meta:unwrap()
-        meta.__handles[self.id].__mode  = 'kv'
-        meta.__handles[self.id]         = nil
-        print('Unwrapped!')
+        if meta.__handles[self.id] ~= nil then
+            local i                     = self.id
+            self.id                     = nil
+            meta.__handles[i].__mode    = 'kv'
+            meta.__handles[i]           = nil
+        end
     end
 end
 
@@ -66,16 +68,25 @@ function Handle:new()
         __handles   = {},
         __props     = {
             id			= {
-                get		= function(t) return GetHandleId(t.__obj) end
+                ids     = {},
+                get		= function(t)
+                    if not ids[t] then ids[t] = GetHandleId(t.__obj) end 
+                    return ids[t]
+                end,
+                --  No matter which value you give to v, set will only make it 0.
+                set     = function(t, v) ids[t] = nil end
             },
             handle      = {
                 get     = function(t) return t.__obj end
             }
-        }
+        },
     }
     obj.__index     = self.getIndexFactory(obj)
     obj.__newindex  = self.setIndexFactory(obj)
     obj.wrap        = self.wrapFactory(obj)
+    obj.__eq        = function(a, b)
+        return (a.id == b.id) and (getmetatable(a) == getmetatable(b))
+    end
     
     self.unwrapFactory(obj)
     setmetatable(obj, self)

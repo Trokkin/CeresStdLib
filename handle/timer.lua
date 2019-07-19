@@ -1,4 +1,3 @@
-require('CeresStdLib.base.basics')
 require('CeresStdLib.handle.handle')
 
 Timer					= Handle:new()
@@ -75,9 +74,10 @@ function Timer:destroy()
 	end
 	if self.running then
 		self:pause()
-	end 
-	DestroyTimer(self.__obj)
+	end
+	local t = self.__obj 
 	self:unwrap()
+	DestroyTimer(t)
 end
 
 --- Example: `doPeriodically(1/32, function(t) end)`

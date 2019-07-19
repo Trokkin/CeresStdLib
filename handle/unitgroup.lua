@@ -1,4 +1,3 @@
-require('CeresStdLib.base.basics')
 require('CeresStdLib.handle.handle')
 
 UnitGroup               = Handle:new()
@@ -7,7 +6,11 @@ UnitGroup.__props.count = {
                     }
 
 function UnitGroup.create() return UnitGroup.wrap(CreateGroup()) end
-function UnitGroup:destroy() DestroyGroup(self.__obj) self:unwrap() end
+function UnitGroup:destroy() 
+    local g = self.__obj
+    self:unwrap()
+    DestroyGroup(g)
+end
 
 --  Not wrapped up yet.
 function UnitGroup.getEnumUnit() return GetEnumUnit() end
