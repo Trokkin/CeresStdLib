@@ -1,21 +1,20 @@
 require('CeresStdLib.base.Init')
 
-base.Log.Log	= base.Log.Log or {}
-base.Log.LogLevel	= base.Log.LogLevel or {
+LogLevel = {
 	TRACE = 0,
 	DEBUG = 1,
 	INFO = 2,
 	WARNING = 3,
 	ERROR = 4
 }
-LogLevel		= base.LogLevel
-LogLevel.Tags 	= LogLevel.Tags or {
+LogLevel.Tags = {
 	[LogLevel.TRACE] = '|cffADADADtrace|r - ',
 	[LogLevel.DEBUG] = '|cff2685DCdebug|r - ',
 	[LogLevel.INFO] = '|cffFFCC00info|r - ',
 	[LogLevel.WARNING] = '|cffF47E3Ewarning|r - ',
 	[LogLevel.ERROR] = '|cffFB2700error|r - '
 }
+
 
 DEBUG_LEVEL = -1 -- LogLevel.INFO
 
@@ -27,8 +26,7 @@ function LogLevel.getTag(level)
 	return ''
 end
 
-base.arr	
-Log 		= base.Log
+Log = {}
 
 local arr = {}
 init(function()

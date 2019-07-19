@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Basics')
+require('CeresStdLib.base.basics')
 
 --  Za Warudo should be empty.
 local metaWorld     = {}

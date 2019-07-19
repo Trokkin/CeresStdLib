@@ -1,9 +1,7 @@
 require('CeresStdLib.base.Log')
 
-local Log       = Log
-NOT_VALID       = _G.NOT_VALID or {}
-
-META_TABLE      = _G.META_TABLE or {
+NOT_VALID       = {}
+META_TABLE      = {
     __TABLES    = {},
     __NAMES     = {},
 }

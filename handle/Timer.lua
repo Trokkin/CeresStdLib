@@ -1,5 +1,5 @@
-require('CeresStdLib.base.Native')
-require('CeresStdLib.base.Log')
+require('CeresStdLib.base.native')
+require('CeresStdLib.base.log')
 
 local free_timers	= {}
 local Timer 		= {}

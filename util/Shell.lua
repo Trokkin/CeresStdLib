@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Log')
+require('CeresStdLib.base.log')
 
 -- Enables player(0) to turn chat into Lua shell.
 -- Run anything you want.

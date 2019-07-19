@@ -1,10 +1,10 @@
 require('CeresStdLib.folders')
-require('CeresStdLib.base.Basics')
+require('CeresStdLib.base.basics')
 
-require('CeresStdLib.handle.Timer')
-require('CeresStdLib.handle.UnitGroup')
+require('CeresStdLib.handle.timer')
+require('CeresStdLib.handle.unitgroup')
 
-require('CeresStdLib.util.Benchmark')
-require('CeresStdLib.util.Shell')
-require('CeresStdLib.util.World')
-require('CeresStdLib.util.UnitEvent')
+require('CeresStdLib.util.benchmark')
+require('CeresStdLib.util.shell')
+require('CeresStdLib.util.world')
+require('CeresStdLib.util.unitevent')

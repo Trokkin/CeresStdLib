@@ -1,5 +1,4 @@
-base.arr.arr 	= base.arr.arr or {}
-local arr		= base.arr.arr
+local arr		= {}
 
 --- Ensures that `f` will be executed not before the game begins (timer 0.0)
 function init(f)

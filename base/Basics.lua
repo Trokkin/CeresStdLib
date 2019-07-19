@@ -1,9 +1,11 @@
-require('CeresStdLib.base.Native')
-require('CeresStdLib.base.Optimizations')
-require('CeresStdLib.base.Rawcode')
-require('CeresStdLib.base.Execute')
-require('CeresStdLib.base.Log')
-require('CeresStdLib.base.Init')
+require('CeresStdLib.folders')
+
+require('CeresStdLib.base.native')
+require('CeresStdLib.base.optimizations')
+require('CeresStdLib.base.rawcode')
+require('CeresStdLib.base.execute')
+require('CeresStdLib.base.log')
+require('CeresStdLib.base.init')
 require('CeresStdLib.base.readonly')
 
 ANIMATION_PERIOD = 1 / 32.
@@ -19,7 +21,6 @@ DETECT_LEAVE        = fromRawCode('Amdf')
 DUMMY_PLAYER = players[PLAYER_NEUTRAL_PASSIVE]
 DUMMY_HOSTILE_PLAYER = players[PLAYER_NEUTRAL_AGGRESSIVE]
 
-local __oldInitB = InitBlizzard
-InitBlizzard = function()
-    pcall(__oldInitB)
-end
+replaceNative('InitBlizzard', function()
+    pcall(Native.InitBlizzard)
+end)

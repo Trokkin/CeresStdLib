@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Basics')
+require('CeresStdLib.base.basics')
 
 local uG    = {}
 UnitGroup   = makeReadonly(uG, 'Unit Group')

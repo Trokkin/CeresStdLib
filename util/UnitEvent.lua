@@ -20,10 +20,10 @@
         -> callback is your function.
 ]]
 
-require('CeresStdLib.base.Basics')
+require('CeresStdLib.base.basics')
 
-require('CeresStdLib.handle.UnitGroup')
-require('CeresStdLib.util.World')
+require('CeresStdLib.handle.unitgroup')
+require('CeresStdLib.util.world')
 
 EVENT_UNIT_ENTER        = 1
 EVENT_UNIT_LEAVE        = 2

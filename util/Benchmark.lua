@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Basics')
+require('CeresStdLib.base.basics')
 
 BENCHMARK_MULTIPLIER = 1000000
 
