@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Init')
+require('CeresStdLib.base.init')
 
 LogLevel = {
 	TRACE = 0,

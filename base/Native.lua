@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Log')
+require('CeresStdLib.base.log')
 
 --- It is generally not recommended to use old natives.
 Native = {}
