@@ -8,3 +8,6 @@ Handle.__index = function(t, k)
     end
     return rawget(t, k)
 end
+
+TimerEx = {}
+setmetatable(TimerEx, Handle)
