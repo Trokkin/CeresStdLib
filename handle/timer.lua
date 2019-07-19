@@ -4,40 +4,46 @@ Timer			= {
 	__handles	= {},
 	__props		= {
 		id			= {
-				get			= function(t) return GetHandleId(t.__obj) end,
+			get			= function(t) return GetHandleId(t.__obj) end,
 		},
 		remaining	= {
-				get 		= function(t) return TimerGetRemaining(t.__obj) end
+			get 		= function(t) return TimerGetRemaining(t.__obj) end
 		},
 		timeout		= {
-				get 		= function(t) return TimerGetTimeout(t.__obj) end
+			get 		= function(t) return TimerGetTimeout(t.__obj) end
 		},
 		elapsed		= {
-				get 		= function(t) return TimerGetElapsed(t.__obj) end
+			get 		= function(t) return TimerGetElapsed(t.__obj) end
 		},
 		handle		= {
-				get 		= function(t) return t.__obj end
-		}
+			get 		= function(t) return t.__obj end
+		},
 	}
 }
 
 function Timer.__index(t, k)
 	if Timer.__props[k] then
-		return Timer.__props[k].get(t)
+		if Timer.__props[k].get then
+			return Timer.__props[k].get(t)
+		else
+			return Timer.__props[k]
+		end
 	end
 	return rawget(Timer, k)
 end
 
 function Timer.__newindex(t, k, v)
 	if Timer.__props[k] then
-		Timer.__props[k].set(t, v)
+		if Timer.__props[k].set then
+			Timer.__props[k].set(t, v)
+		end
 	end
 end
 
 function Timer.wrap(t)
 	local i = GetHandleId(t)
 	if not Timer.__handles[i] then
-		Timer.__handles[i] = {__obj = t}
+		Timer.__handles[i] = {__obj = t, hasCallback, inCallback}
 		setmetatable(Timer.__handles[i], Timer)
 	end
 	return Timer.__handles[i]
@@ -48,8 +54,15 @@ function Timer.getExpired() return Timer.wrap(GetExpiredTimer()) end
 
 function Timer:unwrap()	Timer.__handles[self.id] = nil end
 function Timer:resume()	ResumeTimer(self.__obj) end
-function Timer:start(dur, looped, func)	TimerStart(self.__obj, dur, looped, func) end
 function Timer:pause() PauseTimer(self.__obj) end
+function Timer:start(dur, looped, func)
+	self.hasCallback = true
+	TimerStart(self.__obj, dur, looped, function()
+		self.inCallback = true
+		func()
+		self.inCallback = false
+	end) 
+end
 
 function Timer:destroy() DestroyTimer(self.__obj) self:unwrap() end
 
