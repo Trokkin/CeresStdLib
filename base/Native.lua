@@ -1,7 +1,7 @@
 require('CeresStdLib.base.Log')
 
 --- It is generally not recommended to use old natives.
-Native = {}
+Native = base.Native or {}
 
 function replaceNative(name, new_f)
 	if not _G[name] then

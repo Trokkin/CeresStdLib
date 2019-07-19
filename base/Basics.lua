@@ -4,7 +4,7 @@ require('CeresStdLib.base.Rawcode')
 require('CeresStdLib.base.Execute')
 require('CeresStdLib.base.Log')
 require('CeresStdLib.base.Init')
-require('CeresStdLib.base.Const')
+require('CeresStdLib.base.readonly')
 
 ANIMATION_PERIOD = 1 / 32.
 MAX_COLLISION_SIZE = 197.

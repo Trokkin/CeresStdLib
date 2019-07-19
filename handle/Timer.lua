@@ -1,8 +1,8 @@
 require('CeresStdLib.base.Native')
 require('CeresStdLib.base.Log')
 
-local Timer 		= {}
 local free_timers	= {}
+local Timer 		= {}
 
 FLAG_TIMER_PAUSED	= 1
 FLAG_TIMER_ALTERED	= 2
