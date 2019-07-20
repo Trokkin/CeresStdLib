@@ -1,5 +1,26 @@
 Handle = {__metatable = false}
 
+Handle.copy            = function()
+    local obj          = {
+        __handles   = {},
+        __props     = {
+            id			= {
+                ids     = {}
+            },
+            handle      = {
+                get     = function(t) return t.__obj end
+            }
+        },
+    }
+    obj.__props.id.get  = function(t)
+        if not obj.__props.id.ids[t] then obj.__props.id.ids[t] = GetHandleId(t.__obj) end 
+        return obj.__props.id.ids[t]
+    end
+    --  No matter which value you give to v, set will only make it 0.
+    obj.__props.id.set  = function(t, v) obj.__props.id.ids[t] = nil end
+    return obj
+end
+
 Handle.getIndexFactory = function(meta)
     local f = function(t, k)
         if meta.__props[k] then
@@ -10,10 +31,8 @@ Handle.getIndexFactory = function(meta)
         end
         local metaHas = rawget(meta, k)
         if metaHas ~= nil then
-            print('Metatable has attribute ' .. k)
             return metaHas
         end
-        print('Only table has attribute ' .. k)
         return rawget(t, k)
     end
     return f
@@ -31,10 +50,8 @@ Handle.setIndexFactory = function(meta)
         end
         local metaHas = rawget(meta, k)
         if metaHas ~= nil then
-            print('Cannot modify metatable attribute')
             return
         end
-        print('Setting table attribute ' .. k)
         rawset(t, k, v)
     end
     return f
@@ -43,9 +60,13 @@ end
 Handle.wrapFactory      = function(meta)
     local f = function(handle)
         local i = GetHandleId(handle)
+        if i == 0 then
+            return nil
+        end
         if not meta.__handles[i] then
-            meta.__handles[i] = {__obj = handle}
+            meta.__handles[i]                       = {__obj = handle}
             setmetatable(meta.__handles[i], meta)
+            local j = meta.__handles[i].id
         end
         return meta.__handles[i]
     end
@@ -64,28 +85,12 @@ Handle.unwrapFactory    = function(meta)
 end
 
 function Handle:new()
-    local obj   = {
-        __handles   = {},
-        __props     = {
-            id			= {
-                ids     = {},
-                get		= function(t)
-                    if not ids[t] then ids[t] = GetHandleId(t.__obj) end 
-                    return ids[t]
-                end,
-                --  No matter which value you give to v, set will only make it 0.
-                set     = function(t, v) ids[t] = nil end
-            },
-            handle      = {
-                get     = function(t) return t.__obj end
-            }
-        },
-    }
+    local obj       = self.copy()
     obj.__index     = self.getIndexFactory(obj)
     obj.__newindex  = self.setIndexFactory(obj)
     obj.wrap        = self.wrapFactory(obj)
     obj.__eq        = function(a, b)
-        return (a.id == b.id) and (getmetatable(a) == getmetatable(b))
+        return (obj.__props.id.ids[a] == obj.__props.id.ids[b]) and ((getmetatable(a) == getmetatable(b)) and (getmetatable(a) == obj))
     end
     
     self.unwrapFactory(obj)

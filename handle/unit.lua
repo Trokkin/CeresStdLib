@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Basics')
+require('CeresStdLib.base.basics')
 require('CeresStdLib.handle.handle')
 
 Unit                = Handle:new()
@@ -26,11 +26,17 @@ Unit.__props.height = {
                     SetUnitFlyHeight(t.__obj, height, 0.)
                 end
             }
-
 function Unit.create(player, unitcode, x, y, facing) return Unit.wrap(CreateUnit(player, FourCC(unitcode), x, y, facing)) end
 function Unit.createCorpse(player, unitcode, x, y, facing) return Unit.wrap(CreateCorpse(player, FourCC(unitcode), x, y, facing)) end
-function unit:remove()
-    local u = self.__obj
-    self:unwrap()
-    RemoveUnit(u)
-end
+function Unit:remove() RemoveUnit(self.handle) self:unwrap() end
+
+--  Ability handle not wrapped up yet
+function Unit:getAbility(abilcode) return BlzGetUnitAbility(self.__obj, abilcode) end
+function Unit:getAbilityLevel(abilcode) return GetUnitAbilityLevel(self.__obj, abilcode) end
+function Unit:addAbility(abilcode) return UnitAddAbility(self.__obj, abilcode) end
+function Unit:removeAbility(abilcode) return UnitRemoveAbility(self.__obj, abilcode) end
+
+function Unit:makeAbilityPermanent(flag, abilcode) return UnitMakeAbilityPermanent(self.__obj, flag, abilcode) end
+function Unit:typeId() return GetUnitTypeId(self.__obj) end
+
+function Unit.triggering() return Unit.wrap(GetTriggerUnit()) end

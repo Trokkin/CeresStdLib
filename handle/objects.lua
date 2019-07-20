@@ -1,0 +1,5 @@
+require('CeresStdLib.handle.handle')
+require('CeresStdLib.handle.rect')
+require('CeresStdLib.handle.timer')
+require('CeresStdLib.handle.unit')
+require('CeresStdLib.handle.unitgroup')

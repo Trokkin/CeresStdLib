@@ -21,85 +21,71 @@
 ]]
 
 require('CeresStdLib.base.basics')
+require('CeresStdLib.handle.objects')
 
-require('CeresStdLib.handle.unitgroup')
 require('CeresStdLib.util.world')
 
-EVENT_UNIT_ENTER        = 1
-EVENT_UNIT_LEAVE        = 2
+EVENT_UNIT_ENTER        = EVENT_UNIT_ENTER or {}
+EVENT_UNIT_LEAVE        = EVENT_UNIT_LEAVE or {}
 
-UnitEvent = {}
+UnitEvent               = UnitEvent or {}
+UnitEvent.VALID_VALUES  = UnitEvent.VALID_VALUES or {}
+UnitEvent.RESERVED      = UnitEvent.RESERVED or {enterTrig=nil, leaveTrig=nil, initGroup=nil, initialized=false}
+UnitEvent.DATA          = UnitEvent.DATA or {triggerUnit=nil, eventType=nil}
+UnitEvent.USER_DATA     = UnitEvent.USER_DATA or {}
 
-local trigTable         = {}
-local userData          = {}
+UnitEvent.VALID_VALUES[EVENT_UNIT_ENTER]    = UnitEvent.VALID_VALUES[EVENT_UNIT_ENTER] or {}
+UnitEvent.VALID_VALUES[EVENT_UNIT_LEAVE]    = UnitEvent.VALID_VALUES[EVENT_UNIT_LEAVE] or {}
+UnitEvent.USER_DATA.preplaced               = UnitEvent.USER_DATA.preplaced or {}
+UnitEvent.USER_DATA.indexed                 = UnitEvent.USER_DATA.indexed or {}
+UnitEvent.USER_DATA.hasAbil                 = UnitEvent.USER_DATA.hasAbil or {}
 
-userData.preplaced      = {}   --  Holds references to each unit
-userData.unitId         = {}   --  Holds preplaced flag
-userData.nativeHasAbil  = {}   --  Holds a flag telling the system if the unit already has that ability.
-userData.indexed        = {}
-
-trigTable[0]            = CreateTrigger()
-trigTable[1]            = CreateTrigger()
-trigTable[2]            = CreateGroup()
-trigTable[3]            = {}
-trigTable[4]            = {}
-
-local evType            = 0
-local evData            = nil
-local initialized       = false
-
-replaceNative('GetUnitUserData', function(u)
-    return userData[GetUnitId(u)]
-end)
-replaceNative('SetUnitUserData', function(u, i)
-    userData[GetUnitId(u)] = i
-end)
-
-function GetUnitId(u) return GetHandleId(u) end
-function GetUnitById(i) return userData.unitId[i] end
-function IsUnitPreplaced(u) return userData.preplaced[GetUnitId(u)] end
+function Unit.byId(i) return Unit.__handles[id] end
+function Unit:id() return self.id end
+function Unit:preplaced() return UnitEvent.USER_DATA.preplaced[self.id] end
 
 function UnitEvent.registerCallback(eventType, func)
-    if eventType > 2 or eventType < 1 then return end
-    table.insert(trigTable[eventType + 2], func)
+    if not UnitEvent.VALID_VALUES[eventType] then return end
+    table.insert(UnitEvent.VALID_VALUES[eventType].callbacks, func)
 end
 
-function UnitEvent.getEventType() return evType end
-function UnitEvent.getTriggerUnit() return evData end
-function UnitEvent.getTriggerUnitId() return GetHandleId(evData) end
+function UnitEvent.getEventType() return UnitEvent.DATA.eventType end
+function UnitEvent.getTriggerUnit() return UnitEvent.DATA.triggerUnit end
+function UnitEvent.getTriggerUnitId() return UnitEvent.DATA.triggerUnit.id end
 
-local function callback()
-    local i = evType + 2
-    for _, func in pairs(trigTable[i]) do
+local function callback(eventType)
+    for _, func in pairs(UnitEvent.VALID_VALUES[eventType]) do
         execute(func)
     end
 end
 
 ceres.addHook("main::before", function()
-    TriggerAddCondition(trigTable[0], Filter(function()
+    UnitEvent.RESERVED.enterTrig = CreateTrigger()
+    UnitEvent.RESERVED.leaveTrig = CreateTrigger()
+
+    TriggerAddCondition(UnitEvent.RESERVED.leaveTrig, Filter(function()
         local issuedOrder   = GetIssuedOrderId()
-        local u             = GetTriggerUnit()
+        local u             = Unit.triggering()
         --  Magic undefense
         if issuedOrder == 852479 then
-            if BlzGetUnitAbility(u, DETECT_LEAVE) == nil then
-                local i     = GetUnitId(u)
-                if GetUnitTypeId(u) == 0 then
-                    userData.indexed[i]         = nil
-                    userData[i]                 = nil
-                    userData.preplaced[i]       = nil
-                    userData.unitId[i]          = nil
-                    userData.nativeHasAbil[i]   = nil
+            if u:getAbil(DETECT_LEAVE) then
+                local i     = u.id
+                if u:typeId() == 0 then
+                    UnitEvent.USER_DATA.indexed[i]         = nil
+                    UnitEvent.USER_DATA[i]                 = nil
+                    UnitEvent.USER_DATA.preplaced[i]       = nil
+                    UnitEvent.USER_DATA.hasAbil[i]         = nil
 
                     --  Only do callback if the game has already initialized.
-                    if initialized then
-                        local l     = evType
-                        local ij    = evData
+                    if UnitEvent.RESERVED.initialized then
+                        local l     = UnitEvent.DATA.eventType
+                        local ij    = UnitEvent.DATA.triggerUnit
                         
-                        evType      = EVENT_UNIT_LEAVE
-                        evData      = u
-                        callback()
-                        evData      = ij
-                        evType      = l        
+                        UnitEvent.DATA.eventType    = EVENT_UNIT_LEAVE
+                        UnitEvent.DATA.triggerUnit  = u
+                        callback(UnitEvent.DATA.eventType)
+                        UnitEvent.DATA.triggerUnit  = ij
+                        UnitEvent.DATA.eventType    = l
                     end
                 end
             end
@@ -107,59 +93,59 @@ ceres.addHook("main::before", function()
     end))
     for i=0, bj_MAX_PLAYER_SLOTS - 1 do
         SetPlayerAbilityAvailable(players[i], DETECT_LEAVE, false)
-        TriggerRegisterPlayerUnitEvent(trigTable[0], players[i], EVENT_PLAYER_UNIT_ISSUED_ORDER, nil)
+        TriggerRegisterPlayerUnitEvent(UnitEvent.RESERVED.leaveTrig, players[i], EVENT_PLAYER_UNIT_ISSUED_ORDER, nil)
     end
  
-    TriggerRegisterEnterRegion(trigTable[1], World.REG, nil)
-    TriggerAddCondition(trigTable[1], Filter(function()
-        local u = GetTriggerUnit()
-        local b = UnitAddAbility(u, DETECT_LEAVE)
-        local i = GetUnitId(u)
+    --  World.REG not wrapped up yet, as well as enterTrig
+    TriggerRegisterEnterRegion(UnitEvent.RESERVED.enterTrig, World.REG, nil)
+    TriggerAddCondition(UnitEvent.RESERVED.enterTrig, Filter(function()
+        local u = Unit.triggering()
+        local b = u:addAbility(u, DETECT_LEAVE)
+        local i = u.id
 
-        UnitMakeAbilityPermanent(u, true, DETECT_LEAVE)
-        if not userData.indexed[i] then
-            userData.indexed[i]         = true
-            userData.preplaced[i]       = not initialized
-            userData.unitId[i]          = u
-            userData.nativeHasAbil[i]   = not b
+        u:makeAbilityPermanent(true, DETECT_LEAVE)
+        if not UnitEvent.USER_DATA.indexed[i] then
+            UnitEvent.USER_DATA.indexed[i]         = true
+            UnitEvent.USER_DATA.preplaced[i]       = not UnitEvent.RESERVED.initialized
+            UnitEvent.USER_DATA.hasAbil[i]         = not b
             
-            local l     = evType
-            local ij    = evData
+            local l     = UnitEvent.DATA.eventType
+            local ij    = UnitEvent.DATA.triggerUnit
 
-            if initialized then
-                evType      = EVENT_UNIT_ENTER
-                evData      = u
-                callback()
-                evData      = ij
-                evType      = l
+            if UnitEvent.RESERVED.initialized then                
+                UnitEvent.DATA.eventType    = EVENT_UNIT_ENTER
+                UnitEvent.DATA.triggerUnit  = u
+                callback(UnitEvent.DATA.eventType)
+                UnitEvent.DATA.triggerUnit  = ij
+                UnitEvent.DATA.eventType    = l
             end
         end
     end))
 end)
 
 ceres.addHook('main::after', function()
-    GroupEnumUnitsInRect(trigTable[2], World.RECT, nil)
-    ForGroup(trigTable[2], function()
-        local u = GetEnumUnit()
-        local i = GetHandleId(u)
-        
-        if not userData.indexed[i] then
-            userData.indexed[i]         = true
-            userData.preplaced[i]       = not initialized
-            userData.unitId[i]          = u
-            userData.nativeHasAbil[i]   = not UnitAddAbility(u, DETECT_LEAVE)
-            
-            local l     = evType
-            local ij    = evData
+    UnitEvent.RESERVED.initGroup = UnitGroup.create()
+    UnitEvent.RESERVED.initGroup:enumUnitsInRect(World.RECT, nil)
+    UnitEvent.RESERVED.initGroup:forEach(function()
+        local u = UnitGroup.getEnumUnit()
+        local i = u.id
 
-            evType      = EVENT_UNIT_ENTER
-            evData      = u
-            callback()
-            evData      = ij
-            evType      = l
+        if not UnitEvent.USER_DATA.indexed[i] then
+            UnitEvent.USER_DATA.indexed[i]         = true
+            UnitEvent.USER_DATA.preplaced[i]       = true
+            UnitEvent.USER_DATA.hasAbil[i]         = not u:addAbility(DETECT_LEAVE)
+            
+            local l     = UnitEvent.DATA.eventType
+            local ij    = UnitEvent.DATA.triggerUnit
+            
+            UnitEvent.DATA.eventType    = EVENT_UNIT_ENTER
+            UnitEvent.DATA.triggerUnit  = u
+            callback(UnitEvent.DATA.eventType)
+            UnitEvent.DATA.triggerUnit  = ij
+            UnitEvent.DATA.eventType    = l
         end
-    end)
-    DestroyGroup(trigTable[2])
-    trigTable[2]    = nil
-    initialized     = true
+    end, true)
+    UnitEvent.RESERVED.initGroup:destroy()
+    UnitEvent.RESERVED.initGroup        = nil
+    UnitEvent.RESERVED.initialized      = true
 end)

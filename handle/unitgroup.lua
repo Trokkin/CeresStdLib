@@ -1,4 +1,6 @@
 require('CeresStdLib.handle.handle')
+require('CeresStdLib.handle.unit')
+require('CeresStdLib.handle.rect')
 
 UnitGroup               = Handle:new()
 UnitGroup.__props.count = {
@@ -6,26 +8,15 @@ UnitGroup.__props.count = {
                     }
 
 function UnitGroup.create() return UnitGroup.wrap(CreateGroup()) end
-function UnitGroup:destroy() 
-    local g = self.__obj
-    self:unwrap()
-    DestroyGroup(g)
-end
+function UnitGroup:destroy() DestroyGroup(self.__obj) self:unwrap() end
 
---  Not wrapped up yet.
-function UnitGroup.getEnumUnit() return GetEnumUnit() end
-
-function UnitGroup:unit(index) return BlzGroupUnitAt(self.__obj, index) end
---  Not wrapped up yet.
-function UnitGroup:first() return FirstOfGroup(self.__obj) end
---  Not wrapped up yet.
+function UnitGroup.getEnumUnit() return --[[Unit.wrap(GetEnumUnit()) or]] UnitGroup.__enumUnit end
+function UnitGroup:unit(index) return Unit.wrap(BlzGroupUnitAt(self.__obj, index)) end
+function UnitGroup:first() return Unit.wrap(FirstOfGroup(self.__obj)) end
 function UnitGroup:last() return self:unit(self.count - 1) end
---  Not wrapped up yet.
-function UnitGroup:add(u) return GroupUnitAdd(self.__obj, u) end
---  Not wrapped up yet.
 
---  Wrapped in the UnitGroup class
-function UnitGroup:remove(u) return GroupUnitRemove(self.__obj, u) end
+function UnitGroup:add(u) return GroupAddUnit(self.__obj, u.__obj) end
+function UnitGroup:remove(u) return GroupRemoveUnit(self.__obj, u.__obj) end
 function UnitGroup:addGroup(g) return BlzGroupAddGroupFast(self.__obj, g.__obj) end
 function UnitGroup:removeGroup(g) return BlzGroupRemoveGroupFast(self.__obj, g.__obj) end
 
@@ -47,14 +38,36 @@ function UnitGroup:enumUnitsOfType(unitname, filter, counted)
         GroupEnumUnitsofType(self.__obj, unitname, filter)
     end
 end
--- not wrapped in the Rect class yet.
-function UnitGroup:enumUnitsInRect(rect, filter, counted) 
+function UnitGroup:enumUnitsInRect(rects, filter, counted) 
     if counted then
-        GroupEnumUnitsInRectCounted(self.__obj, rect, filter, counted)
+        GroupEnumUnitsInRectCounted(self.__obj, rects.__obj, filter, counted)
     else
-        GroupEnumUnitsInRect(self.__obj, unitname, filter)
+        GroupEnumUnitsInRect(self.__obj, rects.__obj, filter)
     end
 end
 function UnitGroup:enumUnitsInRangeOfLoc(loc, filter, counted) 
     self:enumUnitsInRange(GetLocationX(loc), GetLocationY(loc), filter, counted)
+end
+function UnitGroup:forEach(callback, destroy)
+    if not destroy then
+        local j                 = self.count
+        for i = 0,j do
+            UnitGroup.__enumUnit    = self:unit(i)
+            if UnitGroup.__enumUnit ~= nil then
+                callback()
+            end
+        end
+    else
+        local i                     = 0
+        while self.count > i do
+            UnitGroup.__enumUnit    = self:unit(i)
+            if UnitGroup.__enumUnit ~= nil then
+                callback()
+                self:remove(UnitGroup.__enumUnit)
+            else
+                i = i + 1
+            end
+        end
+        self:clear()
+    end
 end

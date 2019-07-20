@@ -9,7 +9,7 @@ function Timer.create() return Timer.wrap(CreateTimer()) end
 function Timer.getExpired() return Timer.wrap(GetExpiredTimer()) end
 
 function Timer:resume()	
-	if not self.hasCallback then Log.error('Timer:resume >> Cannot resume a timer which hasn\t started yet!') return end
+	if not self.hasCallback then Log.error('Timer:resume >> Cannot resume a timer which hasn\'t started yet!') return end
 	if not self.inCallback then
 		ResumeTimer(self.__obj) 
 	else
@@ -75,9 +75,8 @@ function Timer:destroy()
 	if self.running then
 		self:pause()
 	end
-	local t = self.__obj 
-	self:unwrap()
-	DestroyTimer(t)
+	DestroyTimer(self.__obj)
+	self.unwrap()
 end
 
 --- Example: `doPeriodically(1/32, function(t) end)`
