@@ -148,8 +148,3 @@ ceres.addHook('main::after', function()
     UnitEvent.RESERVED.initGroup        = nil
     UnitEvent.RESERVED.initialized      = true
 end)
-
-UnitEvent.registerCallback(EVENT_UNIT_ENTER, function()
-    local u = UnitEvent.getTriggerUnit()
-    if u:preplaced() then print(u .. ' is preplaced') else print(u .. ' was spawned.') end
-end)
