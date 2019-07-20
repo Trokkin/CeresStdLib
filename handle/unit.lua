@@ -26,6 +26,27 @@ Unit.__props.height = {
                     SetUnitFlyHeight(t.__obj, height, 0.)
                 end
             }
+Unit.__props.name   = {
+                get = function(t) return GetUnitName(t.__obj) end,
+                set = function(t, k) BlzSetUnitName(t.__obj, k) end
+            }
+Unit.__props.properName   = {
+                get = function(t) return GetHeroProperName(t.__obj) end,
+                set = function(t, k) BlzSetHeroProperName(t.__obj, k) end
+            }
+Unit.__props.typeId = {
+                get = function(t) return GetUnitTypeId(t.__obj) end
+            }
+Unit.__tostring     = function(t)
+    if t.properName ~= '' then
+        return t.properName
+    end
+    return t.name
+end
+Unit.__concat       = function(a, b)
+    return tostring(a) .. tostring(b)
+end
+
 function Unit.create(player, unitcode, x, y, facing) return Unit.wrap(CreateUnit(player, FourCC(unitcode), x, y, facing)) end
 function Unit.createCorpse(player, unitcode, x, y, facing) return Unit.wrap(CreateCorpse(player, FourCC(unitcode), x, y, facing)) end
 function Unit:remove() RemoveUnit(self.handle) self:unwrap() end
@@ -37,6 +58,5 @@ function Unit:addAbility(abilcode) return UnitAddAbility(self.__obj, abilcode) e
 function Unit:removeAbility(abilcode) return UnitRemoveAbility(self.__obj, abilcode) end
 
 function Unit:makeAbilityPermanent(flag, abilcode) return UnitMakeAbilityPermanent(self.__obj, flag, abilcode) end
-function Unit:typeId() return GetUnitTypeId(self.__obj) end
 
 function Unit.triggering() return Unit.wrap(GetTriggerUnit()) end

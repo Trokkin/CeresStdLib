@@ -46,7 +46,7 @@ function Unit:preplaced() return UnitEvent.USER_DATA.preplaced[self.id] end
 
 function UnitEvent.registerCallback(eventType, func)
     if not UnitEvent.VALID_VALUES[eventType] then return end
-    table.insert(UnitEvent.VALID_VALUES[eventType].callbacks, func)
+    table.insert(UnitEvent.VALID_VALUES[eventType], func)
 end
 
 function UnitEvent.getEventType() return UnitEvent.DATA.eventType end
@@ -68,26 +68,25 @@ ceres.addHook("main::before", function()
         local u             = Unit.triggering()
         --  Magic undefense
         if issuedOrder == 852479 then
-            if u:getAbil(DETECT_LEAVE) then
+            if u:getAbility(DETECT_LEAVE) == nil then
                 local i     = u.id
-                if u:typeId() == 0 then
-                    UnitEvent.USER_DATA.indexed[i]         = nil
-                    UnitEvent.USER_DATA[i]                 = nil
-                    UnitEvent.USER_DATA.preplaced[i]       = nil
-                    UnitEvent.USER_DATA.hasAbil[i]         = nil
+                UnitEvent.USER_DATA.indexed[i]         = nil
+                UnitEvent.USER_DATA[i]                 = nil
+                UnitEvent.USER_DATA.preplaced[i]       = nil
+                UnitEvent.USER_DATA.hasAbil[i]         = nil
 
-                    --  Only do callback if the game has already initialized.
-                    if UnitEvent.RESERVED.initialized then
-                        local l     = UnitEvent.DATA.eventType
-                        local ij    = UnitEvent.DATA.triggerUnit
-                        
-                        UnitEvent.DATA.eventType    = EVENT_UNIT_LEAVE
-                        UnitEvent.DATA.triggerUnit  = u
-                        callback(UnitEvent.DATA.eventType)
-                        UnitEvent.DATA.triggerUnit  = ij
-                        UnitEvent.DATA.eventType    = l
-                    end
+                --  Only do callback if the game has already initialized.
+                if UnitEvent.RESERVED.initialized then
+                    local l     = UnitEvent.DATA.eventType
+                    local ij    = UnitEvent.DATA.triggerUnit
+                    
+                    UnitEvent.DATA.eventType    = EVENT_UNIT_LEAVE
+                    UnitEvent.DATA.triggerUnit  = u
+                    callback(UnitEvent.DATA.eventType)
+                    UnitEvent.DATA.triggerUnit  = ij
+                    UnitEvent.DATA.eventType    = l
                 end
+                u:unwrap()
             end
         end
     end))
@@ -100,7 +99,7 @@ ceres.addHook("main::before", function()
     TriggerRegisterEnterRegion(UnitEvent.RESERVED.enterTrig, World.REG, nil)
     TriggerAddCondition(UnitEvent.RESERVED.enterTrig, Filter(function()
         local u = Unit.triggering()
-        local b = u:addAbility(u, DETECT_LEAVE)
+        local b = u:addAbility(DETECT_LEAVE)
         local i = u.id
 
         u:makeAbilityPermanent(true, DETECT_LEAVE)
@@ -148,4 +147,9 @@ ceres.addHook('main::after', function()
     UnitEvent.RESERVED.initGroup:destroy()
     UnitEvent.RESERVED.initGroup        = nil
     UnitEvent.RESERVED.initialized      = true
+end)
+
+UnitEvent.registerCallback(EVENT_UNIT_ENTER, function()
+    local u = UnitEvent.getTriggerUnit()
+    if u:preplaced() then print(u .. ' is preplaced') else print(u .. ' was spawned.') end
 end)
