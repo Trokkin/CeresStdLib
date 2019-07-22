@@ -11,6 +11,7 @@ function Timer.getExpired() return Timer.wrap(GetExpiredTimer()) end
 function Timer:resume()	
 	if not self.hasCallback then Log.error('Timer:resume >> Cannot resume a timer which hasn\'t started yet!') return end
 	if not self.inCallback then
+		self.running = true
 		ResumeTimer(self.__obj) 
 	else
 		self.hasResumed = true
@@ -26,6 +27,7 @@ function Timer:pause()
 	end
 end
 function Timer:start(dur, looped, func)
+	if self.running then return end
 	self.hasCallback = true
 	if not self.inCallback then
 		self.dur		= dur
