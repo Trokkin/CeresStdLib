@@ -84,16 +84,16 @@ Handle.unwrapFactory    = function(meta)
     end
 end
 
-function Handle:new()
-    local obj       = self.copy()
-    obj.__index     = self.getIndexFactory(obj)
-    obj.__newindex  = self.setIndexFactory(obj)
-    obj.wrap        = self.wrapFactory(obj)
+function Handle.new()
+    local obj       = Handle.copy()
+    obj.__index     = Handle.getIndexFactory(obj)
+    obj.__newindex  = Handle.setIndexFactory(obj)
+    obj.wrap        = Handle.wrapFactory(obj)
     obj.__eq        = function(a, b)
         return (obj.__props.id.ids[a] == obj.__props.id.ids[b]) and ((getmetatable(a) == getmetatable(b)) and (getmetatable(a) == obj))
     end
     
-    self.unwrapFactory(obj)
+    Handle.unwrapFactory(obj)
     setmetatable(obj, self)
     return obj
 end

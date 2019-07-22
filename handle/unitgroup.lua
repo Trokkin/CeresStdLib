@@ -2,7 +2,7 @@ require('CeresStdLib.handle.handle')
 require('CeresStdLib.handle.unit')
 require('CeresStdLib.handle.rect')
 
-UnitGroup               = Handle:new()
+UnitGroup               = Handle.new()
 UnitGroup.__props.count = {
                     get = function (t) return BlzGroupGetSize(t.__obj) end
                     }

@@ -1,7 +1,7 @@
 require('CeresStdLib.base.basics')
 require('CeresStdLib.handle.handle')
 
-Unit                = Handle:new()
+Unit                = Handle.new()
 Unit.__props.x      = {
                 get = function(t) return GetUnitX(t.__obj) end,
                 set = function(t, x) SetUnitX(t.__obj, x) end

@@ -1,6 +1,6 @@
 require('CeresStdLib.handle.handle')
 
-Timer					= Handle:new()
+Timer					= Handle.new()
 Timer.__props.remaining	= {get 		= function(t) return TimerGetRemaining(t.__obj) end}
 Timer.__props.timeout	= {get 		= function(t) return TimerGetTimeout(t.__obj) end}
 Timer.__props.elapsed	= {get 		= function(t) return TimerGetElapsed(t.__obj) end}

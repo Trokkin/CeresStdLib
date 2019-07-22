@@ -1,6 +1,6 @@
 require('CeresStdLib.handle.handle')
 
-rect                = Handle:new()
+rect                = Handle.new()
 rect.__props.maxX       = {
     get                 = function(t) return GetRectMaxX(t.__obj) end,
     set                 = function(t, v) SetRect(t.__obj, GetRectMinX(t.__obj), GetRectMinY(t.__obj), v, GetRectMaxY(t.__obj)) end
