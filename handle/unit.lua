@@ -37,6 +37,15 @@ Unit.__props.properName   = {
 Unit.__props.typeId = {
                 get = function(t) return GetUnitTypeId(t.__obj) end
             }
+Unit.__props.owner  = {
+                get = function(t) return GetOwningPlayer(t.__obj) end,
+                set = function(t, k) SetUnitOwner(t.__obj, k, true) end
+            }
+Unit.__props.facing = {
+                get = function(t) return GetUnitFacing(t.__obj) end,
+                set = function(t, k) SetUnitFacing(t.__obj, k) end
+            }
+
 Unit.__tostring     = function(t)
     if t.properName ~= '' then
         return t.properName
@@ -51,11 +60,35 @@ function Unit.create(player, unitcode, x, y, facing) return Unit.wrap(CreateUnit
 function Unit.createCorpse(player, unitcode, x, y, facing) return Unit.wrap(CreateCorpse(player, FourCC(unitcode), x, y, facing)) end
 function Unit:remove() RemoveUnit(self.handle) self:unwrap() end
 
+function Unit:copy() return Unit.wrap(CreateUnit(self.owner, self.typeId, self.x, self.y, self.facing)) end
+
 --  Ability handle not wrapped up yet
 function Unit:getAbility(abilcode) return BlzGetUnitAbility(self.__obj, abilcode) end
 function Unit:getAbilityLevel(abilcode) return GetUnitAbilityLevel(self.__obj, abilcode) end
 function Unit:addAbility(abilcode) return UnitAddAbility(self.__obj, abilcode) end
 function Unit:removeAbility(abilcode) return UnitRemoveAbility(self.__obj, abilcode) end
+
+function Unit:pause(flag) 
+    if flag == nil then
+        flag = true 
+    end
+    return PauseUnit(self.__obj, flag)
+end
+function Unit:show(flag) 
+    if flag == nil then
+        flag = true 
+    end
+    return ShowUnit(self.__obj, flag)
+end
+function Unit:setAnim(anim)
+    anim = anim or "stand"
+    SetUnitAnimation(self.__obj, anim)
+end
+function Unit:queueAnim(anim)
+    anim = anim or "stand"
+    QueueUnitAnimation(self.__obj, anim)
+end
+function Unit:hide(flag) return Unit:show(not flag) end
 
 function Unit:makeAbilityPermanent(flag, abilcode) return UnitMakeAbilityPermanent(self.__obj, flag, abilcode) end
 

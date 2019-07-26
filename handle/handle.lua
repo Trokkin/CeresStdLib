@@ -2,13 +2,13 @@ Handle = {__metatable = false}
 
 Handle.copy            = function()
     local obj          = {
-        __handles   = {},
-        __props     = {
-            id			= {
-                ids     = {}
+        __handles           = {},
+        __props             = {
+            id			        = {
+                ids                 = {}
             },
-            handle      = {
-                get     = function(t) return t.__obj end
+            handle              = {
+                get                 = function(t) return t.__obj end
             }
         },
     }
@@ -64,7 +64,7 @@ Handle.wrapFactory      = function(meta)
             return nil
         end
         if not meta.__handles[i] then
-            meta.__handles[i]                       = {__obj = handle}
+            meta.__handles[i]   = {__obj = handle}
             setmetatable(meta.__handles[i], meta)
             local j = meta.__handles[i].id
         end

@@ -24,31 +24,97 @@ require('CeresStdLib.base.basics')
 require('CeresStdLib.handle.objects')
 
 require('CeresStdLib.util.world')
-require('CeresStdLib.util.listener')
+require('CeresStdLib.util.eventclass')
 
-EVENT_UNIT_ENTER        = EVENT_UNIT_ENTER or {}
-EVENT_UNIT_LEAVE        = EVENT_UNIT_LEAVE or {}
+EVENT_UNIT_ENTER        = EVENT_UNIT_ENTER or EventClass:new()
+EVENT_UNIT_LEAVE        = EVENT_UNIT_LEAVE or EventClass:new()
 
-UnitEvent               = UnitEvent or {}
-UnitEvent.VALID_VALUES  = UnitEvent.VALID_VALUES or {}
-UnitEvent.RESERVED      = UnitEvent.RESERVED or {enterTrig=nil, leaveTrig=nil, initGroup=nil, initialized=false}
-UnitEvent.DATA          = UnitEvent.DATA or {triggerUnit=nil, eventType=nil}
-UnitEvent.USER_DATA     = UnitEvent.USER_DATA or {}
+UnitEvent               = UnitEvent or {
+    RESERVED            = {
+        enterTrig           = nil, 
+        leaveTrig           = nil, 
+        initGroup           = nil, 
+        initialized         = false
+    },
+    DATA                = {
+        triggerUnit         = nil,
+        eventType           = nil
+    },
+    USER_DATA           = {
+        preplaced           = {},
+        indexed             = {},
+        hasAbil             = {}
+    },
+}
 
-UnitEvent.VALID_VALUES[EVENT_UNIT_ENTER]    = UnitEvent.VALID_VALUES[EVENT_UNIT_ENTER] or EventClass:new()
-UnitEvent.VALID_VALUES[EVENT_UNIT_LEAVE]    = UnitEvent.VALID_VALUES[EVENT_UNIT_LEAVE] or EventClass:new()
-UnitEvent.USER_DATA.preplaced               = UnitEvent.USER_DATA.preplaced or {}
-UnitEvent.USER_DATA.indexed                 = UnitEvent.USER_DATA.indexed or {}
-UnitEvent.USER_DATA.hasAbil                 = UnitEvent.USER_DATA.hasAbil or {}
+EVENT_UNIT_ENTER:defMaxRecursion(-1)
+EVENT_UNIT_ENTER:defLocalMaxRecursion(4)
 
 function Unit.byId(i) return Unit.__handles[id] end
 function Unit:id() return self.id end
 function Unit:preplaced() return UnitEvent.USER_DATA.preplaced[self.id] end
-function UnitEvent.registerCallback(eventType, func) UnitEvent.VALID_VALUES[eventType]:register(func) end
+function UnitEvent.registerCallback(eventType, func)
+    eventType:register(func)
+end
 
 function UnitEvent.getEventType() return UnitEvent.DATA.eventType end
 function UnitEvent.getTriggerUnit() return UnitEvent.DATA.triggerUnit end
 function UnitEvent.getTriggerUnitId() return UnitEvent.DATA.triggerUnit.id end
+
+function UnitEvent.unwatch(u)
+    if u:getAbility(DETECT_LEAVE) == nil then
+        local i     = u.id
+        UnitEvent.USER_DATA.indexed[i]         = nil
+        UnitEvent.USER_DATA[i]                 = nil
+        UnitEvent.USER_DATA.preplaced[i]       = nil
+        UnitEvent.USER_DATA.hasAbil[i]         = nil
+
+        --  Only do callback if the game has already initialized.
+        if UnitEvent.RESERVED.initialized then
+            local l     = UnitEvent.DATA.eventType
+            local ij    = UnitEvent.DATA.triggerUnit
+            
+            UnitEvent.DATA.eventType    = EVENT_UNIT_LEAVE
+            UnitEvent.DATA.triggerUnit  = u
+            UnitEvent.DATA.eventType:listen()
+            UnitEvent.DATA.triggerUnit  = ij
+            UnitEvent.DATA.eventType    = l
+        end
+        u:unwrap()
+    end
+end
+
+function UnitEvent.watch(u)
+    local b = u:addAbility(DETECT_LEAVE)
+    local i = u.id
+
+    if not UnitEvent.USER_DATA.indexed[i] then
+        u:makeAbilityPermanent(true, DETECT_LEAVE)
+
+        UnitEvent.USER_DATA.indexed[i]         = true
+        UnitEvent.USER_DATA.preplaced[i]       = not UnitEvent.RESERVED.initialized
+        UnitEvent.USER_DATA.hasAbil[i]         = not b
+        
+        local l     = UnitEvent.DATA.eventType
+        local ij    = UnitEvent.DATA.triggerUnit
+
+        if UnitEvent.RESERVED.initialized then                
+            UnitEvent.DATA.eventType    = EVENT_UNIT_ENTER
+            UnitEvent.DATA.triggerUnit  = u
+            UnitEvent.DATA.eventType:listen()
+            UnitEvent.DATA.triggerUnit  = ij
+            UnitEvent.DATA.eventType    = l
+        end
+    end
+end
+
+replaceNative('CreateUnit', function(p, unitId, x, y, facing)
+    local u             = Native.CreateUnit(p, unitId, x, y, facing)
+    if UnitEvent.DATA.eventType == EVENT_UNIT_ENTER then
+        UnitEvent.watch(Unit.wrap(u))
+    end
+    return u
+end)
 
 ceres.addHook("main::before", function()
     UnitEvent.RESERVED.enterTrig = CreateTrigger()
@@ -59,26 +125,7 @@ ceres.addHook("main::before", function()
         local u             = Unit.triggering()
         --  Magic undefense
         if issuedOrder == 852479 then
-            if u:getAbility(DETECT_LEAVE) == nil then
-                local i     = u.id
-                UnitEvent.USER_DATA.indexed[i]         = nil
-                UnitEvent.USER_DATA[i]                 = nil
-                UnitEvent.USER_DATA.preplaced[i]       = nil
-                UnitEvent.USER_DATA.hasAbil[i]         = nil
-
-                --  Only do callback if the game has already initialized.
-                if UnitEvent.RESERVED.initialized then
-                    local l     = UnitEvent.DATA.eventType
-                    local ij    = UnitEvent.DATA.triggerUnit
-                    
-                    UnitEvent.DATA.eventType    = EVENT_UNIT_LEAVE
-                    UnitEvent.DATA.triggerUnit  = u
-                    UnitEvent.VALID_VALUES[UnitEvent.DATA.eventType]:listen()
-                    UnitEvent.DATA.triggerUnit  = ij
-                    UnitEvent.DATA.eventType    = l
-                end
-                u:unwrap()
-            end
+            UnitEvent.unwatch(u)
         end
     end))
     for i=0, bj_MAX_PLAYER_SLOTS - 1 do
@@ -89,62 +136,17 @@ ceres.addHook("main::before", function()
     --  World.REG not wrapped up yet, as well as enterTrig
     TriggerRegisterEnterRegion(UnitEvent.RESERVED.enterTrig, World.REG, nil)
     TriggerAddCondition(UnitEvent.RESERVED.enterTrig, Filter(function()
-        local u = Unit.triggering()
-        local b = u:addAbility(DETECT_LEAVE)
-        local i = u.id
-
-        u:makeAbilityPermanent(true, DETECT_LEAVE)
-        if not UnitEvent.USER_DATA.indexed[i] then
-            UnitEvent.USER_DATA.indexed[i]         = true
-            UnitEvent.USER_DATA.preplaced[i]       = not UnitEvent.RESERVED.initialized
-            UnitEvent.USER_DATA.hasAbil[i]         = not b
-            
-            local l     = UnitEvent.DATA.eventType
-            local ij    = UnitEvent.DATA.triggerUnit
-
-            if UnitEvent.RESERVED.initialized then                
-                UnitEvent.DATA.eventType    = EVENT_UNIT_ENTER
-                UnitEvent.DATA.triggerUnit  = u
-                UnitEvent.VALID_VALUES[UnitEvent.DATA.eventType]:listen()
-                UnitEvent.DATA.triggerUnit  = ij
-                UnitEvent.DATA.eventType    = l
-            end
-        end
+        UnitEvent.watch(Unit.triggering())
     end))
 end)
 
 ceres.addHook('main::after', function()
-    UnitEvent.RESERVED.initGroup = UnitGroup.create()
+    UnitEvent.RESERVED.initialized  = true
+    UnitEvent.RESERVED.initGroup    = UnitGroup.create()
     UnitEvent.RESERVED.initGroup:enumUnitsInRect(World.RECT, nil)
     UnitEvent.RESERVED.initGroup:forEach(function()
-        local u = UnitGroup.getEnumUnit()
-        local i = u.id
-
-        if not UnitEvent.USER_DATA.indexed[i] then
-            UnitEvent.USER_DATA.indexed[i]         = true
-            UnitEvent.USER_DATA.preplaced[i]       = true
-            UnitEvent.USER_DATA.hasAbil[i]         = not u:addAbility(DETECT_LEAVE)
-            
-            local l     = UnitEvent.DATA.eventType
-            local ij    = UnitEvent.DATA.triggerUnit
-            
-            UnitEvent.DATA.eventType    = EVENT_UNIT_ENTER
-            UnitEvent.DATA.triggerUnit  = u
-            UnitEvent.VALID_VALUES[UnitEvent.DATA.eventType]:listen()
-            UnitEvent.DATA.triggerUnit  = ij
-            UnitEvent.DATA.eventType    = l
-        end
+        UnitEvent.watch(UnitGroup.getEnumUnit())
     end, true)
     UnitEvent.RESERVED.initGroup:destroy()
-    UnitEvent.RESERVED.initGroup        = nil
-    UnitEvent.RESERVED.initialized      = true
-end)
-
-function foo()
-    print('A unit ' .. UnitEvent.getTriggerUnit() .. ' has entered the game.')
-end
-UnitEvent.registerCallback(EVENT_UNIT_ENTER, foo)
-UnitEvent.registerCallback(EVENT_UNIT_ENTER, foo)
-UnitEvent.registerCallback(EVENT_UNIT_LEAVE, function()
-    print('A unit ' .. UnitEvent.getTriggerUnit() .. ' has left the game.')
+    UnitEvent.RESERVED.initGroup    = nil
 end)
