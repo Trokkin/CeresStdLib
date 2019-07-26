@@ -14,7 +14,7 @@ function EventClass:copy()
     local copy      = {
         __shadow    = {
             __level     = 0,
-            __maxlevel  = 2,
+            __maxlevel  = -1,
             __callList  = {
                 __flags     = {},
                 __count     = {},
@@ -142,7 +142,7 @@ end
 
 function EventClass:listen(i)
     self.__level = self.__level + 1
-    if self.__maxlevel > 0 and (self.__level <= self.__maxlevel) then
+    if self.__maxlevel > 0 and (self.__level <= self.__maxlevel) or (self.__maxlevel <= 0) then
         for k, v in pairs(self.__callList.__list) do
             i = self.__callList.__count[v]
             self.__hotList.__cur[self.__level] = v

@@ -47,9 +47,6 @@ UnitEvent               = UnitEvent or {
     },
 }
 
-EVENT_UNIT_ENTER:defMaxRecursion(-1)
-EVENT_UNIT_ENTER:defLocalMaxRecursion(4)
-
 function Unit.byId(i) return Unit.__handles[id] end
 function Unit:id() return self.id end
 function Unit:preplaced() return UnitEvent.USER_DATA.preplaced[self.id] end
