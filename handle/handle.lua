@@ -78,7 +78,7 @@ Handle.unwrapFactory    = function(meta)
         if meta.__handles[self.id] ~= nil then
             local i                     = self.id
             self.id                     = nil
-            meta.__handles[i].__mode    = 'kv'
+            -- meta.__handles[i].__mode    = 'kv'
             meta.__handles[i]           = nil
         end
     end
