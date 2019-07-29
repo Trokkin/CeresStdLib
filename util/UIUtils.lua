@@ -1,19 +1,22 @@
 -- Originally made by Quilnez
 
+-- Screen resolution used to design UI
 SCREEN_WIDTH = 1360
 SCREEN_HEIGHT = 768
 
+-- If true, all frames will be automati adjusted on resolution change
 local AUTOMATIC_ADJUSTMENT = true
 local RESOLUTION_CHECK_INTERVAL = 0.1
+-- If true, component's properties will be retained when it changes parent
 local PERSISTENT_CHILD_PROPERTIES = true
 
 local WidthFactor = 1.0
 local HeightFactor = 1.0
 
-local AllComponents = {}
+local AllComponents = {} -- or list
 UIUtils = {}
 
-init(function ()
+ceres.addHook('main::before', function ()
 	RefreshResolution()
 
 	FrameGameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0)
@@ -47,6 +50,10 @@ init(function ()
 			end
 		end)
 	end
+
+	if not BlzLoadTOCFile("war3mapimp1orted\\UIUtils.toc") then
+		Log.error('UIUtils: Failed to load .toc file')
+	end
 end)
 
 ResolutionWidth = 0
@@ -55,20 +62,24 @@ AspectWidth = 0
 AspectHeight = 0
 IsFullScreen = false
 CommandButtonsVisible = true
-RefAspectWorld = 5.0 -- local
-RefAspectWidth = 4.0 -- local
-RefAspectHeight = 3.0 -- local
-RefExtraWidth = 0.0 -- local
+local RefAspectWorld = 5.0
+local RefAspectWidth = 4.0
+local RefAspectHeight = 3.0
+local RefExtraWidth = 0.0
 MinFrameX = 0.0
 MaxFrameX = 0.0
 DPIMinX = 0.0
 DPIMaxX = 0.0
 DPIMinY = 0.0
 DPIMaxY = RefAspectHeight/RefAspectWorld
-PxToDPI = 0.0 -- local
--- FrameGameUI
--- FrameWorld
--- FrameHeroBar
+local PxToDPI = 0.0
+
+---@type framehandle
+FrameGameUI = nil
+---@type framehandle
+FrameWorld = nil
+---@type framehandle
+FrameHeroBar = nil
 FrameHeroButton = {}
 FrameHeroHPBar = {}
 FrameHeroMPBar = {}
@@ -76,40 +87,57 @@ FrameHeroIndicator = {}
 FrameItemButton = {}
 FrameCommandButton = {}
 FrameSystemButton = {}
--- FramePortrait
--- FrameMinimap
+---@type framehandle
+FramePortrait = nil
+---@type framehandle
+FrameMinimap = nil
 FrameMinimapButton = {}
--- FrameTooltip
--- FrameUberTooltip
--- FrameChatMsg
--- FrameUnitMsg
--- FrameTopMsg
--- FrameConsoleUI
+---@type framehandle
+FrameTooltip = nil
+---@type framehandle
+FrameUberTooltip = nil
+---@type framehandle
+FrameChatMsg = nil
+---@type framehandle
+FrameUnitMsg = nil
+---@type framehandle
+FrameTopMsg = nil
+---@type framehandle
+FrameConsoleUI = nil
 
+---@param w number
+---@param h number
+---@param aw number
 local function CalcAspectRatio(w, h, aw)
 	math.floor(aw*h/w+0.5)
 end
 
+---@param x number
 function XCoordToDPI(x)
 	return x*PxToDPI/RefAspectWidth+DPIMinX
 end
 
+---@param y number
 function YCoordToDPI(y)
 	return y*PxToDPI/RefAspectWidth
 end
 
+---@param r number
 function SizeToDPI(r)
 	return r*PxToDPI/RefAspectWidth
 end
 
+---@param dpi number
 function DPIToXCoord(dpi)
 	return (dpi-DPIMinX)*RefAspectWidth/PxToDPI
 end
 
+---@param dpi number
 function DPIToYCoord(dpi)
 	return dpi*RefAspectWidth/PxToDPI
 end
 
+---@param dpi number
 function DPIToSize(dpi)
 	return dpi*RefAspectWidth/PxToDPI
 end
@@ -139,8 +167,16 @@ function RefreshResolution()
 	MaxFrameX = ResolutionWidth-MinFrameX
 	DPIMinX = -(RefExtraWidth/RefAspectWidth)
 	DPIMaxX = RefAspectWidth/RefAspectWorld-DPIMinX
+
+	for node in AllComponents do
+		if node.parent == UIComponent.Null then
+			node.setLocalScale(node.localSize)
+		end
+	end
 end
 
+---@param state boolean
+---@param commandBtn boolean
 function FullScreenMode(state, commandBtn)
 	IsFullScreen = state
 	CommandButtonsVisible = commandBtn
@@ -171,7 +207,7 @@ function FullScreenMode(state, commandBtn)
 		x = 959.0
 		y = 168.0
 	end
-	for i = 0,11 do
+	for i = 0,110 do
 		if FrameCommandButton[i] == nil then
 			break
 		end
@@ -229,7 +265,6 @@ UIComponent = {}
 UIComponent.__index = UIComponent
 
 UIComponent.Null = 0 -- readonly
-UIComponent.EnumChild = 0 -- readonly
 UIComponent.TriggerComponent = 0 -- readonly
 
 UIComponent.TYPE_TEXT = "UIUtilsText" -- readonly
@@ -241,9 +276,8 @@ UIComponent.TYPE_BAR = "UIUtilsBar" -- readonly
 UIComponent.TYPE_H_SLIDER = "UIUtilsSliderH" -- readonly
 UIComponent.TYPE_V_SLIDER = "UIUtilsSliderV" -- readonly
 
-UIComponent.ExecTrigg = CreateTrigger() -- private
-UIComponent.GC = InitGameCache("UIUtils.w3v") -- private
-UIComponent.HT = InitHashtable() -- private
+local GC = InitGameCache("UIUtils.w3v")
+local HT = {}
 
 function IsSimple(frameType, isSimple)
 	return 	frameType == UIComponent.TYPE_SIMPLE_TEXT or
@@ -258,7 +292,7 @@ function IsSimple(frameType, isSimple)
 end
 
 function GetTriggerComponent()
-	UIComponent.TriggerComponent = LoadInteger(UIComponent.HT, GetHandleId(BlzGetTriggerFrame()), 0)
+	UIComponent.TriggerComponent = HT[GetHandleId(BlzGetTriggerFrame())]
 end
 
 ---@param func function
@@ -273,52 +307,9 @@ function UIComponent:onAnyEvent(func)
     return TriggerAddCondition(self.anyEventTrigg, Condition(func))
 end
 
-
----@param x number
----@param y number
-function UIComponent:move(x, y)
-    self.localX = x
-    self.localY = y
-	if self.parent == UIComponent.Null then
-        self.screenX = x
-        self.screenY = y
-    else
-        self.screenX = self.parent.screenX + self.localX * self.parent:getScale()
-        self.screenY = self.parent.screenY + self.localY * self.parent:getScale()
-    end
-	BlzFrameSetAbsPoint(self.frame, self.anchor,
-		XCoordToDPI(self.screenX*WidthFactor),
-		YCoordToDPI(self.screenY*HeightFactor))
-
-	for node in self.child do
-		node:move(node.localX, node.localY)
-	end
-end
-
----@param x number
----@param y number
-function UIComponent:moveEx(x, y)
-	if self.parent == UIComponent.Null then
-		self:move(x,y)
-	else
-		self:move((x-self.parent.screenX) / self.parent.localSize, (y-self.parent.screenY) / self.parent.localSize)
-	end
-end
-
----@param relative UIComponent
----@param x number
----@param y number
-function UIComponent:relate(relative, x, y)
-	if self.parent == UIComponent.Null then
-        self:move(relative.screenX+x, relative.screenY+y)
-	else
-        self:moveEx(relative.screenX+x, relative.screenY+y)
-	end
-end
-
 ---@param point framepointtype
-function UIComponent:anchorPoint(point)
-    self.anchor = point
+function UIComponent:setAnchorPoint(point)
+    self.anchorPoint = point
 	BlzFrameClearAllPoints(self.frame)
     self:move(self.localX, self.localY)
 end
@@ -327,9 +318,9 @@ end
 function UIComponent:setParent(comp)
     if comp ~= UIComponent.Null then
         if self.parent ~= comp then
-            self.removeNode()
+            table.remove(self.parent.self.removeNode())
         end
-        comp.child.insertNode(self)
+        table.insert(comp.child, self)
     end
 
     if not PERSISTENT_CHILD_PROPERTIES then
@@ -348,10 +339,16 @@ end
 function UIComponent:setText(str)
     BlzFrameSetText(self.textFrameH, str)
 end
+function UIComponent:getText(str)
+    return BlzFrameGetText(self.textFrameH)
+end
 
 ---@param len integer
 function UIComponent:setMaxLength(len)
     BlzFrameSetTextSizeLimit(self.textFrameH, len)
+end
+function UIComponent:getMaxLength(len)
+    return BlzFrameGetTextSizeLimit(self.textFrameH)
 end
 
 ---@param color integer
@@ -364,10 +361,10 @@ function UIComponent:setTexture(filePath)
 	self.mainTextureFile = filePath
     BlzFrameSetTexture(self.mainTextureH, filePath, 0, true)
     if self.disabledTextureFile:len() == 0 then
-        self.disabledTexture = filePath
+        self.setDisabledTexture(filePath)
     end
     if self.pushedTextureFile:len() == 0 then
-        self.pushedTexture = filePath
+        self.setPushedTexture(filePath)
     end
 end
 
@@ -426,8 +423,8 @@ function UIComponent:setStepSize(r)
 	if r < 0.0001 then
 		r = 0.0001
 	end
-	self.step = r
-    BlzFrameSetStepSize(self.frame, self.step)
+	self.stepSize = r
+    BlzFrameSetStepSize(self.frame, self.stepSize)
 end
 
 ---@param r number
@@ -436,7 +433,7 @@ function UIComponent:setLocalScale(r)
 		r = 0.0001
 	end
 	self.localSize = r
-	self:ize(self.width, self.height)
+	self:setSize(self.width, self.height)
 	self:move(self.localX, self.localY)
 	
 	for node in self.child do
@@ -454,15 +451,15 @@ end
 
 ---@param level integer
 function UIComponent:setLevel(level)
-    self.lvl = level
+    self.level = level
     BlzFrameSetLevel(self.frame, level)
 end
 
 ---@param amount integer
-function UIComponent:setVALUE(amount)
+function UIComponent:setOpacity(amount)
     BlzFrameSetAlpha(self.frame, amount)
 end
-function UIComponent:getVALUE()
+function UIComponent:getOpacity()
     return BlzFrameGetAlpha(self.frame)
 end
 
@@ -482,41 +479,142 @@ function UIComponent:getEnabled()
     return BlzFrameGetEnable(self.frame)
 end
 
+---@param comp UIComponent
+function UIComponent:setTooltips(comp)
+    self.tooltips = comp
+    BlzFrameSetTooltip(self.frame, comp.frame)
+end
+
 ---@param width number
 ---@param height number
-function UIComponent:ize(width, height)
+function UIComponent:setSize(width, height)
 	if width < 0 then
 		width = 0
 	end
 	if height < 0 then
 		height = 0
 	end
-	BlzFrameSetSize(frame,
-		SizeToDPI(self.localWidth*self.scale*WidthFactor),
-		SizeToDPI(self.localHeight*self.scale*WidthFactor))
+	BlzFrameSetSize(self.frame,
+		SizeToDPI(self.width * self.scale * WidthFactor),
+		SizeToDPI(self.height * self.scale * WidthFactor))
 end
 
----@param DATA TYPE
-function UIComponent:setVALUE(DATA)
+---@param x number
+---@param y number
+function UIComponent:move(x, y)
+    self.localX = x
+    self.localY = y
+	if self.parent == UIComponent.Null then
+        self.screenX = x
+        self.screenY = y
+    else
+        self.screenX = self.parent.screenX + self.localX * self.parent:getScale()
+        self.screenY = self.parent.screenY + self.localY * self.parent:getScale()
+    end
+	BlzFrameSetAbsPoint(self.frame, self.anchorPoint,
+		XCoordToDPI(self.screenX*WidthFactor),
+		YCoordToDPI(self.screenY*HeightFactor))
+
+	for node in self.child do
+		node:move(node.localX, node.localY)
+	end
 end
 
----@param DATA TYPE
-function UIComponent:setVALUE(DATA)
+---@param x number
+---@param y number
+function UIComponent:moveEx(x, y)
+	if self.parent == UIComponent.Null then
+		self:move(x,y)
+	else
+		self:move((x-self.parent.screenX) / self.parent.localSize, (y-self.parent.screenY) / self.parent.localSize)
+	end
 end
 
----@param DATA TYPE
-function UIComponent:setVALUE(DATA)
+---@param relative UIComponent
+---@param x number
+---@param y number
+function UIComponent:relate(relative, x, y)
+	if self.parent == UIComponent.Null then
+        self:move(relative.screenX+x, relative.screenY+y)
+	else
+        self:moveEx(relative.screenX+x, relative.screenY+y)
+	end
 end
 
+function UIComponent:click()
+    BlzFrameClick(self.frame)
+end
+
+---@param state boolean
+function UIComponent:cageMouse(state)
+    BlzFrameCageMouse(self.frame, state)
+end
+
+---@param state boolean
+function UIComponent:setFocus(state)
+    BlzFrameSetFocus(self.frame, state)
+end
+
+---@param primaryProp integer
+---@param flags integer
+function UIComponent:setSpriteAnimate(primaryProp, flags)
+	BlzFrameSetSpriteAnimate(self.frame, primaryProp, flags)
+end
+
+---@param min number
+---@param max number
+function UIComponent:setMinMaxValue(min, max)
+    self.minValue = min
+    self.maxValue = max
+    BlzFrameSetMinMaxValue(self.frame, min, max)
+end
+
+---@param fontPath string
+---@param height number
+---@param flags integer
+function UIComponent:setFont(fontPath, height, flags)
+    BlzFrameSetFont(self.textFrameH, fontPath, height, flags)
+end
+
+---@param vertical textaligntype
+---@param horizontal textaligntype
+function UIComponent:setTextAlignment( vertical, horizontal)
+    BlzFrameSetTextAlignment(self.textFrameH, vertical, horizontal)
+end
+
+---@param name string
+function UIComponent:getSubFrame(name)
+    return BlzGetFrameByName(name, self.context)
+end
+
+function UIComponent:destroy()
+	for node in self.child do
+		node:destroy()
+	end
+
+    BlzDestroyFrame(self.frame)
+    DestroyTrigger(self.anyEventTrigg)
+    StoreInteger(GC, self.name, I2S(self.context), GetStoredInteger(GC, self.name, "0"))
+    StoreInteger(GC, self.name, "0", self.context)
+	AllComponents.remove(self)
+	self.child = nil
+end
+
+---@param isSimple boolean
+---@param frameType string
+---@param parent UIComponent
+---@param x number
+---@param y number
+---@param level integer
 function UIComponent:new(isSimple, frameType, parent, x, y, level)
 	o = setmetatable(o, self)
 
-    o.context = GetStoredInteger(self.GC, frameType, "0") -- readonly
-	tempInt = GetStoredInteger(self.GC, frameType, o.context) -- readonly
+    o.context = GetStoredInteger(GC, frameType, "0") -- readonly
+	tempInt = GetStoredInteger(GC, frameType, o.context) -- readonly
     if tempInt == 0 then
-        StoreInteger(self.GC, frameType, "0", o.context+1)
+        StoreInteger(GC, frameType, "0", o.context+1)
     else
-        StoreInteger(self.GC, frameType, "0", tempInt)
+        StoreInteger(GC, frameType, "0", tempInt)
 	end
 	
 	if IsSimple(frameType, isSimple) then
@@ -524,29 +622,29 @@ function UIComponent:new(isSimple, frameType, parent, x, y, level)
     else
 		o.frame = BlzCreateFrame(frameType, UIUtils.FrameGameUI, 0, o.context)
 	end -- readonly
-	o.textFrameH = getSubFrame(frameType + "Text") -- private
-	o.modelFrameH = getSubFrame(frameType + "Model") -- private
-	o.mainTextureH = getSubFrame(frameType + "Texture") -- private
-	o.disabledTextureH = getSubFrame(frameType + "Disabled") -- private
-	o.pushedTextureH = getSubFrame(frameType + "Pushed") -- private
-	o.highlightTextureH = getSubFrame(frameType + "Highlight") -- private
-	o.backgroundTextureH = getSubFrame(frameType + "Background") -- private
-	o.borderTextureH = getSubFrame(frameType + "Border") -- private
+	o.textFrameH = o:getSubFrame(frameType + "Text")
+	o.modelFrameH = o:getSubFrame(frameType + "Model")
+	o.mainTextureH = o:getSubFrame(frameType + "Texture")
+	o.disabledTextureH = o:getSubFrame(frameType + "Disabled")
+	o.pushedTextureH = o:getSubFrame(frameType + "Pushed")
+	o.highlightTextureH = o:getSubFrame(frameType + "Highlight")
+	o.backgroundTextureH = o:getSubFrame(frameType + "Background")
+	o.borderTextureH = o:getSubFrame(frameType + "Border")
     if o.mainTextureH == nil then
-       o.mainTextureH = frame
+       o.mainTextureH = o.frame
 	end
    
 	o:setLocalScale(1.0)
-    o.localWidth = DPIToSize(BlzFrameGetWidth(o.frame)) -- private
-	o.localHeight = DPIToSize(BlzFrameGetHeight(o.frame)) -- private
+    o.width = DPIToSize(BlzFrameGetWidth(o.frame))
+	o.height = DPIToSize(BlzFrameGetHeight(o.frame))
 	
-    o.anchor = FRAMEPOINT_BOTTOMLEFT -- private
+    o.anchorPoint = FRAMEPOINT_BOTTOMLEFT -- private
     -- o.child = createNode() -- private
     o.frameType = frameType -- readonly
 	o.name = frameType .. o.context
 	o:setParent(parent)
-    o.level = level --! public operator
-    o.value = 0.0 --! public operator
+    o:setLevel(level)
+    o:setValue(0.0)
 
 	o.mainTextureFile        = "" -- private
 	o.disabledTextureFile    = "" -- private
@@ -556,6 +654,10 @@ function UIComponent:new(isSimple, frameType, parent, x, y, level)
 	o.borderTextureFile        = "" -- private
 	o.modelFile                = "" -- private
 
+	o:move(x, y)
+	o:setMinMaxValue(0, 1)
+	AllComponents:insert(o)
+	HT[GetHandleId(o.frame)] = o
     -- o.localX -- readonly
     -- o.localY -- readonly
     -- o.screenX -- readonly
@@ -565,8 +667,8 @@ function UIComponent:new(isSimple, frameType, parent, x, y, level)
 
     -- o.parent -- private
     -- o.tips -- private
-    -- o.lvl -- private
-    -- o.step -- private
+    -- o.level -- private
+    -- o.stepSize -- private
     -- o.anyEventTrigg -- private
 	return o
 end
