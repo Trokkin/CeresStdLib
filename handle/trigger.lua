@@ -109,3 +109,5 @@ function Trigger:registerAnyUnitEvent(ev)
     end
     return eventList
 end
+function Trigger:registerUnitEvent(uwrap, ev) return TriggerRegisterunitEvent(self.__obj, uwrap.__obj, ev) end
+function Trigger:registerChatEvent(p, chat, exactmatch) return TriggerRegisterPlayerChatEvent(self.__obj, p, chat, exactmatch) end
