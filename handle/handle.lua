@@ -2,6 +2,7 @@ Handle = {__metatable = false}
 
 Handle.copy            = function()
     local obj          = {
+        __shadow            = {},
         __handles           = {},
         __props             = {
             id			        = {
@@ -12,7 +13,7 @@ Handle.copy            = function()
             }
         },
     }
-    obj.__props.id.get  = function(t)
+    obj.__props.id.get      = function(t)
         if not obj.__props.id.ids[t] then obj.__props.id.ids[t] = GetHandleId(t.__obj) end 
         return obj.__props.id.ids[t]
     end
@@ -58,9 +59,9 @@ Handle.setIndexFactory = function(meta)
 end
 
 Handle.wrapFactory      = function(meta)
-    local f = function(handle)
+    local f = function(handle, override)
         local i = GetHandleId(handle)
-        if i == 0 then
+        if i == 0 and not override then
             return nil
         end
         if not meta.__handles[i] then
@@ -74,7 +75,7 @@ Handle.wrapFactory      = function(meta)
 end
 
 Handle.unwrapFactory    = function(meta)
-    function meta:unwrap()
+    local f = function(self)
         if meta.__handles[self.id] ~= nil then
             local i                     = self.id
             self.id                     = nil
@@ -82,6 +83,7 @@ Handle.unwrapFactory    = function(meta)
             meta.__handles[i]           = nil
         end
     end
+    return f
 end
 
 function Handle.new()
@@ -89,11 +91,12 @@ function Handle.new()
     obj.__index     = Handle.getIndexFactory(obj)
     obj.__newindex  = Handle.setIndexFactory(obj)
     obj.wrap        = Handle.wrapFactory(obj)
+    obj.unwrap      = Handle.unwrapFactory(obj)
     obj.__eq        = function(a, b)
         return (obj.__props.id.ids[a] == obj.__props.id.ids[b]) and ((getmetatable(a) == getmetatable(b)) and (getmetatable(a) == obj))
     end
     
     Handle.unwrapFactory(obj)
-    setmetatable(obj, self)
+    setmetatable(obj, obj.__shadow)
     return obj
 end

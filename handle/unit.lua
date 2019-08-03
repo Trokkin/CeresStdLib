@@ -45,6 +45,10 @@ Unit.__props.facing = {
                 get = function(t) return GetUnitFacing(t.__obj) end,
                 set = function(t, k) SetUnitFacing(t.__obj, k) end
             }
+Unit.__props.hp     = {
+                get = function(t) return GetWidgetLife(t.__obj) end,
+                set = function(t, k) SetWidgetLife(t.__obj, k) end
+            }
 
 Unit.__tostring     = function(t)
     if t.properName ~= '' then
@@ -89,7 +93,9 @@ function Unit:queueAnim(anim)
     QueueUnitAnimation(self.__obj, anim)
 end
 function Unit:hide(flag) return Unit:show(not flag) end
+function Unit:type(unittype) return IsUnitType(self.__obj, unittype) end
 
 function Unit:makeAbilityPermanent(flag, abilcode) return UnitMakeAbilityPermanent(self.__obj, flag, abilcode) end
 
 function Unit.triggering() return Unit.wrap(GetTriggerUnit()) end
+function Unit.damageSource() return Unit.wrap(GetEventDamageSource()) end

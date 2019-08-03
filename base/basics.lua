@@ -24,3 +24,18 @@ DUMMY_HOSTILE_PLAYER = players[PLAYER_NEUTRAL_AGGRESSIVE]
 replaceNative('InitBlizzard', function()
     pcall(Native.InitBlizzard)
 end)
+
+local t = {list={}}
+function printAfter(msg)
+    if t.timer == nil then
+        t.timer = CreateTimer()
+        TimerStart(t.timer, 0., false, function()
+            for _, v in ipairs(t.list) do
+                print(v)
+            end
+            DestroyTimer(t.timer)
+            t.timer = nil
+        end)
+    end
+    table.insert(t.list, msg)
+end

@@ -141,6 +141,8 @@ function EventClass:defLocalMaxRecursion(i)
 end
 
 function EventClass:listen(i)
+    local oldEv         = EventClass.current
+    EventClass.current  = self
     self.__level = self.__level + 1
     if self.__maxlevel > 0 and (self.__level <= self.__maxlevel) or (self.__maxlevel <= 0) then
         for k, v in pairs(self.__callList.__list) do
@@ -157,6 +159,8 @@ function EventClass:listen(i)
         end
     end
     self.__level = self.__level - 1
+    EventClass.current  = oldEv
+    
     if self.__level ~= 0 then return end
     for k, v in pairs(self.__rmvList) do
         self:unregister(k)

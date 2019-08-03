@@ -50,17 +50,14 @@ UnitEvent               = UnitEvent or {
 function Unit.byId(i) return Unit.__handles[id] end
 function Unit:id() return self.id end
 function Unit:preplaced() return UnitEvent.USER_DATA.preplaced[self.id] end
-function UnitEvent.registerCallback(eventType, func)
-    eventType:register(func)
-end
 
 function UnitEvent.getEventType() return UnitEvent.DATA.eventType end
 function UnitEvent.getTriggerUnit() return UnitEvent.DATA.triggerUnit end
 function UnitEvent.getTriggerUnitId() return UnitEvent.DATA.triggerUnit.id end
 
 function UnitEvent.unwatch(u)
-    if u:getAbility(DETECT_LEAVE) == nil then
-        local i     = u.id
+    local i     = u.id
+    if u:getAbility(DETECT_LEAVE) == nil then        
         UnitEvent.USER_DATA.indexed[i]         = nil
         UnitEvent.USER_DATA[i]                 = nil
         UnitEvent.USER_DATA.preplaced[i]       = nil
@@ -117,14 +114,14 @@ ceres.addHook("main::before", function()
     UnitEvent.RESERVED.enterTrig = Trigger.create()
     UnitEvent.RESERVED.leaveTrig = Trigger.create()
 
-    UnitEvent.RESERVED.leaveTrig:addCondition(Filter(function()
+    UnitEvent.RESERVED.leaveTrig:addCondition(function()
         local issuedOrder   = GetIssuedOrderId()
         local u             = Unit.triggering()
         --  Magic undefense
         if issuedOrder == 852479 then
             UnitEvent.unwatch(u)
         end
-    end))
+    end)
     for i=0, bj_MAX_PLAYER_SLOTS - 1 do
         SetPlayerAbilityAvailable(players[i], DETECT_LEAVE, false)
         UnitEvent.RESERVED.leaveTrig:registerPlayerUnitEvent(players[i], EVENT_PLAYER_UNIT_ISSUED_ORDER, nil)
@@ -146,8 +143,4 @@ ceres.addHook('main::after', function()
     end, true)
     UnitEvent.RESERVED.initGroup:destroy()
     UnitEvent.RESERVED.initGroup    = nil
-end)
-
-UnitEvent.registerCallback(EVENT_UNIT_ENTER, function()
-    print('Unit ' .. UnitEvent.getTriggerUnit() .. ' entered the game.')
 end)
