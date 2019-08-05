@@ -95,7 +95,6 @@ end
 function Unit:hide(flag) return Unit:show(not flag) end
 function Unit:type(unittype) return IsUnitType(self.__obj, unittype) end
 
-function Unit:makeAbilityPermanent(flag, abilcode) return UnitMakeAbilityPermanent(self.__obj, flag, abilcode) end
+function Unit:makeAbilityPermanent(flag, abilcode) return UnitMakeAbilityPermanent(self.__obj, flag, FourCC(abilcode)) end
 
 function Unit.triggering() return Unit.wrap(GetTriggerUnit()) end
-function Unit.damageSource() return Unit.wrap(GetEventDamageSource()) end

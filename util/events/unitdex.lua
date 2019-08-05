@@ -16,7 +16,7 @@
 
     How to register to these events:
     -> UnitEvent.registerCallback(eventType, callback)
-        -> eventType is the EVENT which you will specify (EVENT_UNIT_ENTER, and EVENT_UNIT_LEAVE)
+        -> eventType is the EVENT which you will specify (EVENT_CUSTOM_UNIT_ENTER, and EVENT_CUSTOM_UNIT_LEAVE)
         -> callback is your function.
 ]]
 
@@ -26,8 +26,8 @@ require('CeresStdLib.util.world')
 
 require('CeresStdLib.util.events.eventclass')
 
-EVENT_UNIT_ENTER        = EVENT_UNIT_ENTER or EventClass:new()
-EVENT_UNIT_LEAVE        = EVENT_UNIT_LEAVE or EventClass:new()
+EVENT_CUSTOM_UNIT_ENTER        = EVENT_CUSTOM_UNIT_ENTER or EventClass:new()
+EVENT_CUSTOM_UNIT_LEAVE        = EVENT_CUSTOM_UNIT_LEAVE or EventClass:new()
 
 UnitEvent               = UnitEvent or {
     RESERVED            = {
@@ -68,7 +68,7 @@ function UnitEvent.unwatch(u)
             local l     = UnitEvent.DATA.eventType
             local ij    = UnitEvent.DATA.triggerUnit
             
-            UnitEvent.DATA.eventType    = EVENT_UNIT_LEAVE
+            UnitEvent.DATA.eventType    = EVENT_CUSTOM_UNIT_LEAVE
             UnitEvent.DATA.triggerUnit  = u
             UnitEvent.DATA.eventType:listen()
             UnitEvent.DATA.triggerUnit  = ij
@@ -93,7 +93,7 @@ function UnitEvent.watch(u)
         local ij    = UnitEvent.DATA.triggerUnit
 
         if UnitEvent.RESERVED.initialized then                
-            UnitEvent.DATA.eventType    = EVENT_UNIT_ENTER
+            UnitEvent.DATA.eventType    = EVENT_CUSTOM_UNIT_ENTER
             UnitEvent.DATA.triggerUnit  = u
             UnitEvent.DATA.eventType:listen()
             UnitEvent.DATA.triggerUnit  = ij
@@ -104,7 +104,7 @@ end
 
 replaceNative('CreateUnit', function(p, unitId, x, y, facing)
     local u             = Native.CreateUnit(p, unitId, x, y, facing)
-    if UnitEvent.DATA.eventType == EVENT_UNIT_ENTER then
+    if UnitEvent.DATA.eventType == EVENT_CUSTOM_UNIT_ENTER then
         UnitEvent.watch(Unit.wrap(u))
     end
     return u

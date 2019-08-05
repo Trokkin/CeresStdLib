@@ -71,6 +71,7 @@ ceres.addHook("main::before", function()
             end
         end
     end
+    --  Prevent external assignments.
     AttackType.__props.name.set = nil
     DamageType.__props.name.set = nil
     WeaponType.__props.name.set = nil

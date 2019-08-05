@@ -22,7 +22,7 @@ ATK_TYPE_MAGIC      = ATK_TYPE_MAGIC or {}
 ATK_TYPE_SPELLS     = ATK_TYPE_SPELLS or {}
 
 DamageEvent     = DamageEvent or {
-    DEBUG_MODE      = true,
+    -- DEBUG_MODE      = true
     __protected     = {
         current     = {
         }
@@ -145,6 +145,9 @@ setmetatable(DamageEvent, DamageEvent.__protected)
 EVENT_CUSTOM_DAMAGING  = DamageEvent.modifier
 EVENT_CUSTOM_DAMAGED   = DamageEvent.normal
 
+--  Added unit extension in file.
+function Unit.damageSource() return Unit.wrap(GetEventDamageSource()) end
+
 function DamageEvent.addStack()
     local newtable  = {
         __protected     = {
@@ -159,7 +162,7 @@ function DamageEvent.addStack()
 
     setmetatable(newtable, DamageEvent.__modify)
     DamageEvent.stack[0]                    = DamageEvent.stack[0] + 1
-    if DamageEvent.DEBUG_MODE then print('DamageEvent.stack: Stack size (+) (' .. tostring(DamageEvent.stack[0]) .. ')') end
+    -- if DamageEvent.DEBUG_MODE then print('DamageEvent.stack: Stack size (+) (' .. tostring(DamageEvent.stack[0]) .. ')') end
     DamageEvent.stack[DamageEvent.stack[0] ] = newtable
 end
 
@@ -170,7 +173,7 @@ function DamageEvent.popStack()
     
     DamageEvent.stack[DamageEvent.stack[0] ] = nil
     DamageEvent.stack[0]                     = DamageEvent.stack[0] - 1
-    if DamageEvent.DEBUG_MODE then print('DamageEvent.stack: Stack size (-) (' .. tostring(DamageEvent.stack[0]) .. ')') end
+    -- if DamageEvent.DEBUG_MODE then print('DamageEvent.stack: Stack size (-) (' .. tostring(DamageEvent.stack[0]) .. ')') end
 end
 
 ceres.addHook("main::before", function()
@@ -219,16 +222,3 @@ ceres.addHook("main::before", function()
 end)
 
 function DamageEvent.registerCallback(evType, callback) evType:register(callback) end
-
---[[
-DamageEvent.registerCallback(EVENT_CUSTOM_DAMAGING, function()
-    DamageEvent.dmg     = 0.
-end)
-]]
-
-DamageEvent.registerCallback(EVENT_CUSTOM_DAMAGED, function()
-    print(DamageEvent.target .. " (" .. tostring(DamageEvent.target.id) .. ") was damaged by " .. DamageEvent.source .. " for " .. tostring(DamageEvent.dmg))
-    print('Original damage amount: ' .. tostring(DamageEvent.pureDmg))
-    print('Attack type: ' .. DamageEvent.atktype.name)
-    print('Damage type: ' .. DamageEvent.dmgtype.name)
-end)
