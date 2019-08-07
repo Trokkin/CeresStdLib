@@ -17,26 +17,24 @@ local function list_pop(self, node)
 	if node == nil then
 		return nil
 	end
-	if node == self.first then
-		self.first = node.next
-	end
-	if node == self.last then
-		self.last = node.prev
-	end
 	if node == self.iter then
 		self.iter = node.prev
 	end
 	if node == self.backiter then
 		self.backiter = node.next
 	end
-	if node.next ~= nil then
-		node.next.prev = node.prev
-    	node.next = nil
-	end
-	if node.prev ~= nil then
+	if node == self.first then
+		self.first = node.next
+	else
     	node.prev.next = node.next
-    	node.prev = nil
 	end
+	if node == self.last then
+		self.last = node.prev
+	else
+		node.next.prev = node.prev
+	end
+	node.prev = nil
+	node.next = nil
 	return node.value
 end
 
@@ -128,7 +126,7 @@ function List:foldl(func, first)
 	local l = self:next()
 	while l do
 		first = func(first, l)
-		l = self:next()
+		l = self:next()		
 	end
 	self.iter = i
 	return first
