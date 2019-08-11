@@ -1,6 +1,6 @@
 ofstream = {}
 local ofstream = ofstream
-ofstream.raw_prefix = ']]i(p,[['
+ofstream.raw_prefix = ']]i([['
 ofstream.raw_suffix = ']])--[['
 ofstream.raw_size = 256 - #ofstream.raw_prefix - #ofstream.raw_suffix
 ofstream.load_ability = FourCC('ANdc')
@@ -8,7 +8,7 @@ ofstream.load_ability = FourCC('ANdc')
 function ofstream.open(filename)
 	ofstream.name = filename
     PreloadGenClear()
-	Preload('")\nendfunction\n//! beginusercode\nlocal p={} local i=table.insert--[[')
+	Preload('")\nendfunction\n//! beginusercode\nlocal p={} local i=function(s)table.insert(p,s)end--[[')
 end
 
 function ofstream.write(s)
