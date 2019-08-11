@@ -1,53 +1,72 @@
 netstream = {}
-netstream.listeners = {}
+netstream.channels = {}
 
 function netstream.onRecieve(name, f)
-	if netstream.listeners[name] == nil then
-		netstream.listeners[name] = {}
-		netstream.recieved[name] = {}
-		netstream.listener[name] = CreateTrigger()
-		for p in players do
-			BlzTriggerRegisterPlayerSyncEvent(netstream.listener[name], p, name, true)
-			BlzTriggerRegisterPlayerSyncEvent(netstream.listener[name], p, name, false)
+	if netstream.channels[name] == nil then
+		local ch = {}
+		netstream.channels[name] = ch
+		ch.listeners = {}
+		ch.recieved = {}
+		ch.queue = {}
+		ch.listener = CreateTrigger()
+		for i, p in pairs(players) do
+			BlzTriggerRegisterPlayerSyncEvent(ch.listener, p, name, true)
+			BlzTriggerRegisterPlayerSyncEvent(ch.listener, p, name, false)
 		end
-		TriggerAddAction(function ()
+		TriggerAddAction(ch.listener, function ()
 			local s = BlzGetTriggerSyncData()
 			local p = GetTriggerPlayer()
 		    if s:sub(1,2) == '^{' then
-				netstream.recieved[name][p] = {}
+				ch.recieved[p] = {}
 		        s = s:sub(3)
 		    end
-		    if netstream.recieved[name][p] == nil then
+		    if ch.recieved[p] == nil then
 		        Log.warn('netstream', name, 'headless package!')
 		        return
 		    end
 		    if s:sub(-2) == '^}' then
-		        table.insert(netstream.recieved[name][p],s:sub(1, -3))
-		        s = table.concat(netstream.recieved[name][p])
-				netstream.recieved[name][p] = nil
-				for l in netstream.listeners[name] do
-					f(s, p)
+		        table.insert(ch.recieved[p],s:sub(1, -3))
+		        s = table.concat(ch.recieved[p])
+				ch.recieved[p] = nil
+				for i, f_ in ipairs(ch.listeners) do
+					f_(s, p)
 				end
 		    else
-		        table.insert(netstream.recieved[name][p], s)
+		        table.insert(ch.recieved[p], s)
 		    end
 		end)
 	end
-	table.insert(netstream.listeners[name], f)
+	table.insert(netstream.channels[name].listeners, f)
 end
 
 function netstream.send(name, s)
-	table.insert(netstream.queue[name], '^{'..s..'^}')
-	local timer = CreateTimer()
-	local i = 1
-	TimerStart(timer, 1/32., true, function()
-		while i < #s do
-			-- Assuming it returns false before desync
-			if not BlzSendSyncData(name, ofstream.raw_prefix..s:sub(i,i+254)..ofstream.raw_suffix) then
-				return
+	local ch = netstream.channels[name]
+	if ch == nil then return end
+	table.insert(ch.queue, '^{'..s..'^}')
+	if ch.timer == nil then
+		local i = 1
+		local n = 1
+		local c = 0
+		ch.timer = CreateTimer()
+		TimerStart(ch.timer, 1/32., true, function()
+			while #ch.queue > 0 do
+				local s_ = ch.queue[1]
+				while i < #s_ do
+					-- Assuming it returns false before desync
+					Log.info(s_:sub(i,i+254))
+					if not BlzSendSyncData(name, s_:sub(i,i+254)) then
+						n = n + 1
+						return
+					end
+					c = c + 1
+					i = i + 255
+				end
+				i = 1
+				table.remove(ch.queue, 1)
 			end
-			i = i + 255
-		end
-		DestroyTimer(timer)
-	end)
+			Log.info('net.send took', n, 'seconds', c, 'packages')
+			DestroyTimer(ch.timer)
+			ch.timer = nil
+		end)
+	end
 end
