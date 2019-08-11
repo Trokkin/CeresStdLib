@@ -10,6 +10,8 @@ require('CeresStdLib.base.Rawcode')
 
 require('CeresStdLib.util.Benchmark')
 require('CeresStdLib.util.Shell')
+require('CeresStdLib.util.file')
+require('CeresStdLib.util.netstream')
 
 require('CeresStdLib.handle.Timer')
 require('CeresStdLib.container.LinkedList')
