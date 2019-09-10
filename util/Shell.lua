@@ -51,11 +51,11 @@ function KillShell()
 end
 
 function SaveShell()
-    ofstream.open("LuaShellDump.pld")
-    ofstream.write(table.concat(cache, '\n'))
-    ofstream.close()
+    fio.open("LuaShellDump.pld")
+    fio.write(table.concat(cache, '\n'))
+    fio.close()
 end
 
 function LoadShell()
-    ExecuteString(loadfile("LuaShellDump.pld"))
+    ExecuteString(fio.loadfile("LuaShellDump.pld"))
 end
