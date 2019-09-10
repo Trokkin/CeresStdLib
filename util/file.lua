@@ -1,33 +1,37 @@
-ofstream = {}
-local ofstream = ofstream
-ofstream.raw_prefix = ']]i([['
-ofstream.raw_suffix = ']])--[['
-ofstream.raw_size = 256 - #ofstream.raw_prefix - #ofstream.raw_suffix
-ofstream.load_ability = FourCC('ANdc')
+--- File Input/Output
+fio = {}
+local fio = fio
+fio.raw_prefix = ']]i([['
+fio.raw_suffix = ']])--[['
+fio.raw_size = 256 - #fio.raw_prefix - #fio.raw_suffix
+fio.load_ability = FourCC('ANdc')
+fio.str_empty_file = 'FIO_EMPTY_FILE'
 
-function ofstream.open(filename)
-	ofstream.name = filename
+--- Returns string saved in file found on given path, else nil
+---@param filename string
+---@return string
+function fio.loadfile(filename)
+    local s = BlzGetAbilityTooltip(fio.load_ability, 0)
+    BlzSetAbilityTooltip(fio.load_ability, fio.str_empty_file, 0)
+    Preloader(filename)
+    local loaded = BlzGetAbilityTooltip(fio.load_ability, 0)
+    BlzSetAbilityTooltip(fio.load_ability, s, 0)
+    if loaded == fio.str_empty_file then
+        return nil
+    end
+    return loaded
+end
+
+--- Saves given string to a file on given path
+--- that can be loaded with `.loadfile()`
+---@param filename string
+---@param string string
+function fio.savefile(filename, string)
     PreloadGenClear()
 	Preload('")\nendfunction\n//! beginusercode\nlocal p={} local i=function(s)table.insert(p,s)end--[[')
-end
-
-function ofstream.write(s)
-	for i=1, #s, ofstream.raw_size do
-		Preload(ofstream.raw_prefix..s:sub(i,i+ofstream.raw_size-1)..ofstream.raw_suffix)
+	for i=1, #string, fio.raw_size do
+		Preload(fio.raw_prefix..string:sub(i,i+fio.raw_size-1)..fio.raw_suffix)
 	end
-end
-
-function ofstream.close()
-    Preload(']]BlzSetAbilityTooltip('..ofstream.load_ability..', table.concat(p), 0) print("File '.. ofstream.name ..' loaded successfully!")\n//! endusercode\nfunction AAA takes nothing returns nothing\n//')
-	PreloadGenEnd( ofstream.name )
-	ofstream.name = nil
-end
-
-function loadfile(filename)
-    local s = BlzGetAbilityTooltip(ofstream.load_ability, 0)
-    BlzSetAbilityTooltip(ofstream.load_ability, '', 0)
-    Preloader(filename)
-    local loaded = BlzGetAbilityTooltip(ofstream.load_ability, 0)
-    BlzSetAbilityTooltip(ofstream.load_ability, s, 0)
-    return loaded
+    Preload(']]BlzSetAbilityTooltip('..fio.load_ability..', table.concat(p), 0) print("File '.. fio.name ..' loaded successfully!")\n//! endusercode\nfunction AAA takes nothing returns nothing\n//')
+	PreloadGenEnd( fio.name )
 end
