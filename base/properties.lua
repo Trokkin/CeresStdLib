@@ -1,16 +1,16 @@
 local log = require('CeresStdLib.base.log')
 
---- Creates `__properties` table for the object.
+--- Creates `__props` table for the object.
 --- Replaces `__index` and `__newindex` to use named properties described as
 --- `{ get : function, set: function }`. Absent getters or setters throw an error.
 ---@param object table
 function enableProperties(object)
-	if object.__properties ~= nil then return end
-	object.__properties = {}
+	if object.__props ~= nil then return end
+	object.__props = {}
 	object.__index = function(self, key)
-		if object.__properties[key] then
-			if object.__properties[key].get then
-				return object.__properties[key].get(self)
+		if object.__props[key] then
+			if object.__props[key].get then
+				return object.__props[key].get(self)
 			else
 				log.error('Tried to access unaccessible property "', key, '"')
 			end
@@ -22,9 +22,9 @@ function enableProperties(object)
         return object[key]
 	end
 	object.__newindex = function(self, key, value)
-	    if object.__properties[key] then
-			if object.__properties[key].set then
-				object.__properties[key].set(self, value)
+	    if object.__props[key] then
+			if object.__props[key].set then
+				object.__props[key].set(self, value)
 			else
 				log.error('Tried to modify unmodifiable property "', key, '" with value "', tostring(value), '"')
 			end
@@ -42,6 +42,7 @@ function enableProperties(object)
 	        rawset(self, key, value)
 		end
 	end
+	return object
 end
 
 return enableProperties

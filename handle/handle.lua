@@ -2,29 +2,27 @@ require('CeresStdLib.base.properties')
 Handle = {__metatable = false}
 
 Handle.copy            = function()
-    local obj          = {
+    local obj          = enableProperties{
         __shadow            = {},
         __handles           = {},
-        __props             = {
-            handle              = {
-                get                 = function(t) return t.__obj end
-            }
-        },
-        __ids = {},
+        __ids = {}
+    }
+    obj.__props.handle              = {
+        get                 = function(t) return t.__obj end
     }
     obj.__props.id = {
         get = function(t)
-            if not obj.__ids[t] then obj.__ids[t] = GetHandleId(t.__obj) end 
+            if not obj.__ids[t] then obj.__ids[t] = GetHandleId(t.__obj) end
             return obj.__ids[t]
         end,
-        set = function(t, v) obj.__ids[t] = nil end,
+        set = function(t, v) obj.__ids[t] = nil end
     }
     return obj
 end
 
 function Handle.new()
     local obj = Handle.copy()
-    enableProperties(obj)
+    obj.__props.field = { get = function() return 'lol' end}
     obj.wrap = function(handle, override)
         local i = GetHandleId(handle)
         if i == 0 and not override then
