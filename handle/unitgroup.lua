@@ -35,7 +35,7 @@ function UnitGroup:enumUnitsOfType(unitname, filter, counted)
     if counted then
         GroupEnumUnitsOfTypeCounted(self.__obj, unitname, filter, counted)
     else
-        GroupEnumUnitsofType(self.__obj, unitname, filter)
+        GroupEnumUnitsOfType(self.__obj, unitname, filter)
     end
 end
 function UnitGroup:enumUnitsInRect(rects, filter, counted) 
@@ -59,7 +59,7 @@ function UnitGroup:forEach(callback, destroy)
         end
     else
         local i                     = 0
-        while self.count > i do
+        while self.count > i do -- TODO: compare with nil
             UnitGroup.__enumUnit    = self:unit(i)
             if UnitGroup.__enumUnit ~= nil then
                 callback()

@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Log')
+require('CeresStdLib.base.log')
 
 NOT_VALID       = {}
 META_TABLE      = {

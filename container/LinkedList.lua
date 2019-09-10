@@ -1,4 +1,4 @@
-require('CeresStdLib.base.Log')
+require('CeresStdLib.base.log')
 
 List = {}
 List.__index = List

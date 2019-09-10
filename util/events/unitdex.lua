@@ -20,8 +20,8 @@
         -> callback is your function.
 ]]
 
-require('CeresStdLib.base.basics')
-require('CeresStdLib.handle.objects')
+require('CeresStdLib.base')
+require('CeresStdLib.handle')
 require('CeresStdLib.util.world')
 
 require('CeresStdLib.util.events.eventclass')
@@ -47,7 +47,7 @@ UnitEvent               = UnitEvent or {
     },
 }
 
-function Unit.byId(i) return Unit.__handles[id] end
+function Unit.byId(id) return Unit.__handles[id] end
 function Unit:id() return self.id end
 function Unit:preplaced() return UnitEvent.USER_DATA.preplaced[self.id] end
 

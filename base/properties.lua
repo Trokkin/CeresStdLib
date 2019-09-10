@@ -1,4 +1,4 @@
-local log = require('CeresStdLib.base.Log')
+local log = require('CeresStdLib.base.log')
 
 --- Creates `__properties` table for the object.
 --- Replaces `__index` and `__newindex` to use named properties described as

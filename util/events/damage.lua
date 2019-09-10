@@ -1,5 +1,5 @@
 require('CeresStdLib.base.basics')
-require('CeresStdLib.handle.objects')
+require('CeresStdLib.handle')
 
 require('CeresStdLib.util.events.eventclass')
 

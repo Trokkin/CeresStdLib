@@ -1,5 +1,5 @@
-require('CeresStdLib.base.basics')
-require('CeresStdLib.handle.objects')
+require('CeresStdLib.base')
+require('CeresStdLib.handle')
 
 --  The world should be
 META_WORLD          = META_WORLD or {}
