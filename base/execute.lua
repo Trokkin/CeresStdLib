@@ -1,5 +1,5 @@
-require('CeresStdLib.base.Log')
-require('CeresStdLib.base.Native')
+require('CeresStdLib.base.log')
+require('CeresStdLib.base.native')
 
 local function _xexecute(handler, success, msg, ...)
 	if not success then
