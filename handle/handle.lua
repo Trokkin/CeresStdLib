@@ -1,3 +1,4 @@
+require('CeresStdLib.base.properties')
 Handle = {__metatable = false}
 
 Handle.copy            = function()
@@ -5,98 +6,49 @@ Handle.copy            = function()
         __shadow            = {},
         __handles           = {},
         __props             = {
-            id			        = {
-                ids                 = {}
-            },
             handle              = {
                 get                 = function(t) return t.__obj end
             }
         },
+        __ids = {},
     }
-    obj.__props.id.get      = function(t)
-        if not obj.__props.id.ids[t] then obj.__props.id.ids[t] = GetHandleId(t.__obj) end 
-        return obj.__props.id.ids[t]
-    end
-    --  No matter which value you give to v, set will only make it 0.
-    obj.__props.id.set  = function(t, v) obj.__props.id.ids[t] = nil end
+    obj.__props.id = {
+        get = function(t)
+            if not obj.__ids[t] then obj.__ids[t] = GetHandleId(t.__obj) end 
+            return obj.__ids[t]
+        end,
+        set = function(t, v) obj.__ids[t] = nil end,
+    }
     return obj
 end
 
-Handle.getIndexFactory = function(meta)
-    local f = function(t, k)
-        if meta.__props[k] then
-            if meta.__props[k].get then
-                return meta.__props[k].get(t)
-            end
-            return meta.__props[k][t]
-        end
-        local metaHas = rawget(meta, k)
-        if metaHas ~= nil then
-            return metaHas
-        end
-        return rawget(t, k)
-    end
-    return f
-end
-
-Handle.setIndexFactory = function(meta)
-    local f = function(t, k, v)
-        if meta.__props[k] then
-            if meta.__props[k].set then
-                meta.__props[k].set(t, v)
-                return
-            end
-            meta.__props[k][t] = v
-            return
-        end
-        local metaHas = rawget(meta, k)
-        if metaHas ~= nil then
-            return
-        end
-        rawset(t, k, v)
-    end
-    return f
-end
-
-Handle.wrapFactory      = function(meta)
-    local f = function(handle, override)
+function Handle.new()
+    local obj = Handle.copy()
+    enableProperties(obj)
+    obj.wrap = function(handle, override)
         local i = GetHandleId(handle)
         if i == 0 and not override then
             return nil
         end
-        if not meta.__handles[i] then
-            meta.__handles[i]   = {__obj = handle}
-            setmetatable(meta.__handles[i], meta)
-            local j = meta.__handles[i].id
+        if not obj.__handles[i] then
+            obj.__handles[i]   = {__obj = handle}
+            setmetatable(obj.__handles[i], obj)
+            local j = obj.__handles[i].id
         end
-        return meta.__handles[i]
+        return obj.__handles[i]
     end
-    return f
-end
-
-Handle.unwrapFactory    = function(meta)
-    local f = function(self)
-        if meta.__handles[self.id] ~= nil then
+    obj.unwrap = function(self)
+        if obj.__handles[self.id] ~= nil then
             local i                     = self.id
             self.id                     = nil
-            -- meta.__handles[i].__mode    = 'kv'
-            meta.__handles[i]           = nil
+            -- obj.__handles[i].__mode    = 'kv'
+            obj.__handles[i]           = nil
         end
     end
-    return f
-end
-
-function Handle.new()
-    local obj       = Handle.copy()
-    obj.__index     = Handle.getIndexFactory(obj)
-    obj.__newindex  = Handle.setIndexFactory(obj)
-    obj.wrap        = Handle.wrapFactory(obj)
-    obj.unwrap      = Handle.unwrapFactory(obj)
-    obj.__eq        = function(a, b)
-        return (obj.__props.id.ids[a] == obj.__props.id.ids[b]) and ((getmetatable(a) == getmetatable(b)) and (getmetatable(a) == obj))
+    obj.__eq = function(a, b)
+        return (obj.__ids[a] == obj.__ids[b]) and ((getmetatable(a) == getmetatable(b)) and (getmetatable(a) == obj))
     end
     
-    Handle.unwrapFactory(obj)
     setmetatable(obj, obj.__shadow)
     return obj
 end
