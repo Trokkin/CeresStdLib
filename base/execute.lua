@@ -23,7 +23,7 @@ end
 --- Else, returns everything what was returned by the function.
 ---@param f function
 function execute(f, ...)
-	return _xexecute(function(msg) Log.error(msg) end, pcall(f, ...))
+	return _xexecute(Log.error, pcall(f, ...))
 end
 
 replaceNative('assert', function(...)
