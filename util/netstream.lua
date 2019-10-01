@@ -1,38 +1,41 @@
 netstream = {}
 local netstream = netstream
+netstream.CHANNEL_NAME = 'STD_NETSTREAM'
 
-local function createChannel(name)
+local function createChannel()
 	local ch = {}
 	netstream.channel = ch
-	ch.name = name
 	ch.listeners = {}
 	ch.recieved = {}
 	ch.queue = {}
 	ch.listener = CreateTrigger()
 	for i, p in pairs(players) do
-		BlzTriggerRegisterPlayerSyncEvent(ch.listener, p, name, true)
-		BlzTriggerRegisterPlayerSyncEvent(ch.listener, p, name, false)
+		BlzTriggerRegisterPlayerSyncEvent(ch.listener, p, netstream.CHANNEL_NAME, true)
+		BlzTriggerRegisterPlayerSyncEvent(ch.listener, p, netstream.CHANNEL_NAME, false)
 	end
 	TriggerAddAction(ch.listener, function ()
 		local s = BlzGetTriggerSyncData()
 		local p = GetTriggerPlayer()
-	    if s:sub(1,2) == '^{' then
+		if s:sub(1,2) == '^{' then
+			if ch.recieved[p] ~= nil then
+				Log.warn('netstream discarded unclosed package')
+			end
 			ch.recieved[p] = {}
 	        s = s:sub(3)
 	    end
 	    if ch.recieved[p] == nil then
-	        Log.warn('netstream', name, 'headless package!')
+	        Log.warn('netstream recieved headless package')
 	        return
 	    end
-	    if s:sub(-2) == '^}' then
+	    if s:sub(-2) ~= '^}' then
+	        table.insert(ch.recieved[p], s)
+	    else
 	        table.insert(ch.recieved[p],s:sub(1, -3))
 	        s = table.concat(ch.recieved[p])
 			ch.recieved[p] = nil
 			for i, f_ in ipairs(ch.listeners) do
 				f_(s, p)
 			end
-	    else
-	        table.insert(ch.recieved[p], s)
 	    end
 	end)
 end
@@ -48,7 +51,7 @@ local function createChannelTimer()
 			local s_ = ch.queue[1]
 			while i < #s_ do
 				-- TODO: Check if it returns false before desync to notice that no more data should be synced
-				if not BlzSendSyncData(ch.name, s_:sub(i,i+254)) then
+				if not BlzSendSyncData(netstream.CHANNEL_NAME, s_:sub(i,i+254)) then
 					n = n + 1
 					return
 				end
