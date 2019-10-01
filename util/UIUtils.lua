@@ -1,3 +1,4 @@
+require('CeresStdLib.base')
 -- Originally made by Quilnez
 
 -- Screen resolution used to design UI
@@ -16,7 +17,7 @@ local HeightFactor = 1.0
 local AllComponents = {} -- or list
 UIUtils = {}
 
-ceres.addHook('main::before', function ()
+init(function ()
 	RefreshResolution()
 
 	FrameGameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0)
@@ -51,9 +52,10 @@ ceres.addHook('main::before', function ()
 		end)
 	end
 
-	if not BlzLoadTOCFile("war3mapimp1orted\\UIUtils.toc") then
+	if not BlzLoadTOCFile("war3mapimported\\UIUtils.toc") then
 		Log.error('UIUtils: Failed to load .toc file')
 	end
+	Log.info('Load successful')
 end)
 
 ResolutionWidth = 0
@@ -109,7 +111,7 @@ FrameConsoleUI = nil
 ---@param h number
 ---@param aw number
 local function CalcAspectRatio(w, h, aw)
-	math.floor(aw*h/w+0.5)
+	return math.floor(aw*h/w+0.5)
 end
 
 ---@param x number
@@ -163,12 +165,13 @@ function RefreshResolution()
 		AspectHeight = 10
 		RefExtraWidth = 0.4
 	end
+	Log.info('Refresh resolution:', ResolutionWidth, ResolutionHeight, AspectWidth, AspectHeight)
 	MinFrameX = RefExtraWidth * 320.0
 	MaxFrameX = ResolutionWidth-MinFrameX
 	DPIMinX = -(RefExtraWidth/RefAspectWidth)
 	DPIMaxX = RefAspectWidth/RefAspectWorld-DPIMinX
 
-	for node in AllComponents do
+	for node, v in pairs(AllComponents) do
 		if node.parent == UIComponent.Null then
 			node.setLocalScale(node.localSize)
 		end
@@ -187,9 +190,9 @@ function FullScreenMode(state, commandBtn)
 		BlzFrameSetAllPoints(FrameWorld, FrameGameUI)
 		BlzFrameSetAbsPoint(FrameConsoleUI, FRAMEPOINT_RIGHT, XCoordToDPI(-999.0), YCoordToDPI(-999.0))
 		-- Retain in-game message frame position
-		yo  = SizeToDPI(300.0)
-		xo1 = SizeToDPI(65.0)
-		xo2 = SizeToDPI(710.0)
+		local yo  = SizeToDPI(300.0)
+		local xo1 = SizeToDPI(65.0)
+		local xo2 = SizeToDPI(710.0)
 		BlzFrameClearAllPoints(FrameUnitMsg)
 		BlzFrameSetAbsPoint(FrameUnitMsg, FRAMEPOINT_TOPLEFT, xo1, 0.5)
 		BlzFrameSetAbsPoint(FrameUnitMsg, FRAMEPOINT_TOPRIGHT, xo2, 0.5)
@@ -596,7 +599,7 @@ function UIComponent:destroy()
     DestroyTrigger(self.anyEventTrigg)
     StoreInteger(GC, self.name, I2S(self.context), GetStoredInteger(GC, self.name, "0"))
     StoreInteger(GC, self.name, "0", self.context)
-	AllComponents.remove(self)
+	AllComponents[self] = nil
 	self.child = nil
 end
 
@@ -656,7 +659,7 @@ function UIComponent:new(isSimple, frameType, parent, x, y, level)
 
 	o:move(x, y)
 	o:setMinMaxValue(0, 1)
-	AllComponents:insert(o)
+	AllComponents[o] = true
 	HT[GetHandleId(o.frame)] = o
     -- o.localX -- readonly
     -- o.localY -- readonly
