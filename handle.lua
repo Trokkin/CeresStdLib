@@ -1,8 +1,11 @@
-require('CeresStdLib.handle.handle')
-require('CeresStdLib.handle.rect')
-require('CeresStdLib.handle.timer')
-require('CeresStdLib.handle.unit')
-require('CeresStdLib.handle.unitgroup')
-require('CeresStdLib.handle.eventid')
-require('CeresStdLib.handle.trigger')
-require('CeresStdLib.handle.damageinfo')
+--- Catalog of handle shadwowing packages
+handle = {
+	handle = require('CeresStdLib.handle.handle'),
+	rect = require('CeresStdLib.handle.rect'),
+	timer = require('CeresStdLib.handle.timer'),
+	unit = require('CeresStdLib.handle.unit'),
+	unitgroup = require('CeresStdLib.handle.unitgroup'),
+	eventid = require('CeresStdLib.handle.eventid'),
+	trigger = require('CeresStdLib.handle.trigger'),
+	damageinfo = require('CeresStdLib.handle.damageinfo')
+}

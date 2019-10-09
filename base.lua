@@ -1,9 +1,12 @@
-require('CeresStdLib.base.basics')
-require('CeresStdLib.base.native')
-require('CeresStdLib.base.optimizations')
-require('CeresStdLib.base.rawcode')
-require('CeresStdLib.base.execute')
-require('CeresStdLib.base.log')
-require('CeresStdLib.base.init')
-require('CeresStdLib.base.readonly')
-require('CeresStdLib.base.properties')
+--- Catalog of base packages
+base = {
+	basics = require('CeresStdLib.base.basics'),
+	native = require('CeresStdLib.base.native'),
+	optimizations = require('CeresStdLib.base.optimizations'),
+	rawcode = require('CeresStdLib.base.rawcode'),
+	execute = require('CeresStdLib.base.execute'),
+	log = require('CeresStdLib.base.log'),
+	init = require('CeresStdLib.base.init'),
+	readonly = require('CeresStdLib.base.readonly'),
+	properties = require('CeresStdLib.base.properties')
+}
