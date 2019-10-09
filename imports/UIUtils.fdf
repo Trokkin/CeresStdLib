@@ -1,0 +1,236 @@
+Frame "SLIDER" "UIUtilsSliderH"
+{
+    	SliderLayoutHorizontal,
+    	Height 	0.012,
+    	Width 	0.139,
+
+    	ControlBackdrop "UIUtilsSliderHTexture",
+    	Frame "BACKDROP" "UIUtilsSliderHTexture"
+	{
+        	DecorateFileNames,
+        	BackdropTileBackground,
+        	BackdropBlendAll,
+        	BackdropBackground  		"EscMenuSliderBackground",
+        	BackdropBackgroundInsets 	0.0025 0.0025 0.0025 0.0025,
+        	BackdropEdgeFile  		"EscMenuSliderBorder",
+        	BackdropCornerFlags 		"UL|UR|BL|BR|T|L|B|R",
+        	BackdropCornerSize  		0.006,
+    	}
+
+    	ControlDisabledBackdrop "UIUtilsSliderHDisabled",
+    	Frame "BACKDROP" "UIUtilsSliderHDisabled"
+	{
+        	DecorateFileNames,
+        	BackdropTileBackground,
+        	BackdropBlendAll,
+        	BackdropBackground  		"EscMenuSliderBackground",
+        	BackdropBackgroundInsets 	0.0025 0.0025 0.0025 0.0025,
+        	BackdropEdgeFile  		"EscMenuSliderBorder",
+        	BackdropCornerFlags 		"UL|UR|BL|BR|T|L|B|R",
+        	BackdropCornerSize  		0.006,
+    	}
+
+    	SliderThumbButtonFrame "UIUtilsSliderHThumbButton",
+    	Frame "BUTTON" "UIUtilsSliderHThumbButton"
+	{
+        	Width 	0.016,
+        	Height 	0.016,
+
+        	ControlBackdrop "UIUtilsSliderHThumbButtonTexture",
+        	Frame "BACKDROP" "UIUtilsSliderHThumbButtonTexture"
+		{
+            		DecorateFileNames,
+            		BackdropBlendAll,
+            		BackdropBackground  "EscMenuSliderThumbButton",
+        	}
+
+        	ControlDisabledBackdrop "UIUtilsSliderHThumbButtonDisabled",
+        	Frame "BACKDROP" "UIUtilsSliderHThumbButtonDisabled"
+		{
+            		DecorateFileNames,
+            		BackdropBlendAll,
+            		BackdropBackground  "EscMenuSliderDisabledThumbButton",
+        	}
+    	}
+}
+
+Frame "SLIDER" "UIUtilsSliderV"
+{
+    	SliderLayoutVertical,
+    	Height 	0.139,
+    	Width 	0.012,
+
+    	ControlBackdrop "UIUtilsSliderVTexture",
+    	Frame "BACKDROP" "UIUtilsSliderVTexture"
+	{
+        	DecorateFileNames,
+        	BackdropTileBackground,
+        	BackdropBlendAll,
+        	BackdropBackground  		"EscMenuSliderBackground",
+        	BackdropBackgroundInsets 	0.0025 0.0025 0.0025 0.0025,
+        	BackdropEdgeFile  		"EscMenuSliderBorder",
+        	BackdropCornerFlags 		"UL|UR|BL|BR|T|L|B|R",
+        	BackdropCornerSize  		0.006,
+    	}
+
+    	ControlDisabledBackdrop "UIUtilsSliderVDisabled",
+    	Frame "BACKDROP" "UIUtilsSliderVDisabled"
+	{
+        	DecorateFileNames,
+        	BackdropTileBackground,
+        	BackdropBlendAll,
+        	BackdropBackground  		"EscMenuSliderBackground",
+        	BackdropBackgroundInsets 	0.0025 0.0025 0.0025 0.0025,
+        	BackdropEdgeFile  		"EscMenuSliderBorder",
+        	BackdropCornerFlags 		"UL|UR|BL|BR|T|L|B|R",
+        	BackdropCornerSize  		0.006,
+    	}
+
+    	SliderThumbButtonFrame "UIUtilsSliderVThumbButton",
+    	Frame "BUTTON" "UIUtilsSliderVThumbButton"
+	{
+        	Width 	0.016,
+        	Height 	0.016,
+
+        	ControlBackdrop "UIUtilsSliderVThumbButtonTexture",
+        	Frame "BACKDROP" "UIUtilsSliderVThumbButtonTexture"
+		{
+            		DecorateFileNames,
+            		BackdropBlendAll,
+            		BackdropBackground  "EscMenuSliderThumbButton",
+        	}
+
+        	ControlDisabledBackdrop "UIUtilsSliderVThumbButtonDisabled",
+        	Frame "BACKDROP" "UIUtilsSliderVThumbButtonDisabled"
+		{
+            		DecorateFileNames,
+            		BackdropBlendAll,
+            		BackdropBackground  "EscMenuSliderDisabledThumbButton",
+        	}
+    	}
+}
+
+Frame "SIMPLEFRAME" "UIUtilsSimpleText"
+{
+	DecorateFileNames,
+	Width 	0.01,
+	Height 	0.01,
+
+    	String "UIUtilsSimpleTextText" INHERITS "UIUtilsTexFormat"
+	{
+    		Font "MasterFont", 	0.013,
+        	FontJustificationH 	JUSTIFYLEFT,
+        	FontJustificationV 	JUSTIFYMIDDLE,
+   		FontShadowColor 	0.0 0.0 0.0 0.9,
+   		FontShadowOffset 	0.001 -0.001,
+    	}
+}
+
+Frame "GLUETEXTBUTTON" "UIUtilsButton"
+{
+    	Height 		0.047,
+    	Width 		0.047,
+    	ControlStyle 	"AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+
+    	ControlBackdrop "UIUtilsButtonTexture",
+    	Frame "BACKDROP" "UIUtilsButtonTexture"
+	{
+            	SetAllPoints,
+        	BackdropBlendAll,
+        	BackdropBackground 		"Textures\white.blp",
+    	}
+
+    	ControlDisabledBackdrop "UIUtilsButtonDisabled",
+    	Frame "BACKDROP" "UIUtilsButtonDisabled"
+	{
+            	SetAllPoints,
+        	BackdropBlendAll,
+        	BackdropBackground 		"Textures\white.blp",
+    	}
+
+    	ControlPushedBackdrop "UIUtilsButtonPushed",
+    	Frame "BACKDROP" "UIUtilsButtonPushed"
+	{
+            	SetAllPoints,
+        	BackdropBlendAll,
+    		BackdropBackground  		"Textures\white.blp",
+    		BackdropBackgroundInsets 	0.001 0.001 0.001 0.001,
+    	}
+
+	ControlMouseOverHighlight "UIUtilsButtonHighlight",
+	Frame "HIGHLIGHT" "UIUtilsButtonHighlight"
+	{
+            	SetAllPoints,
+	    	DecorateFileNames,
+    		HighlightType 			"FILETEXTURE",
+    		HighlightAlphaFile 		"EscMenuButtonMouseOverHighlight",
+    		HighlightAlphaMode 		"ADD",
+    	}
+}
+
+Frame "BUTTON" "UIUtilsTexture"
+{
+    	Height 	0.047,
+    	Width 	0.047,
+
+    	ControlBackdrop "UIUtilsTextureTexture",
+    	Frame "BACKDROP" "UIUtilsTextureTexture"
+	{
+            	SetAllPoints,
+        	BackdropBlendAll,
+        	BackdropBackground 		"Textures\white.blp",
+    	}
+
+    	ControlDisabledBackdrop "UIUtilsTextureDisabled",
+    	Frame "BACKDROP" "UIUtilsTextureDisabled"
+	{
+            	SetAllPoints,
+        	BackdropBlendAll,
+        	BackdropBackground 		"Textures\white.blp",
+    	}
+}
+
+Frame "SIMPLESTATUSBAR" "UIUtilsBar"
+{
+	Width 		0.07,
+	Height 		0.012,
+	BarTexture 	"Textures\white.blp",
+
+	Layer "BACKGROUND"
+	{
+		Texture "UIUtilsBarBackground"
+		{
+			File "Textures\black32.blp"
+		}
+	}
+
+	Frame "SIMPLEFRAME" "UIUtilsBarFrame"
+	{
+       		DecorateFileNames,
+		SetAllPoints,
+
+		Layer "ARTWORK"
+		{
+			Texture "UIUtilsBarBorder"
+			{
+				DecorateFileNames,
+				File "SimpleXpBarBorder"
+			}
+		}
+	}
+}
+
+Frame "SIMPLEFRAME" "UIUtilsSimpleTexture"
+{
+	Width 	0.047,
+	Height 	0.047,
+
+	Layer "ARTWORK"
+	{
+		Texture "UIUtilsSimpleTextureTexture"
+		{
+			DecorateFileNames,
+			File "Textures\white.blp"
+		}
+	}
+}
